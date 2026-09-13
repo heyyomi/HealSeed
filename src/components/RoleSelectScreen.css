@@ -1,0 +1,123 @@
+.role-screen {
+  background-color: var(--bg-card);
+}
+
+.role-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.role-select-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 18px;
+  background-color: #FFFFFF;
+  border-radius: var(--radius-xl);
+  border: 2px solid #E2E8F0;
+  cursor: pointer;
+  transition: all var(--transition-bounce);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.role-select-card:hover {
+  border-color: #86EFAC;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.1);
+}
+
+.role-select-card.selected {
+  border-color: var(--primary-500);
+  background-color: #F0FDF4;
+  box-shadow: 0 12px 28px -4px rgba(34, 197, 94, 0.2);
+  transform: translateY(-2px);
+}
+
+.role-card-icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform var(--transition-bounce);
+}
+
+.role-select-card.selected .role-card-icon-wrapper {
+  transform: scale(1.06);
+}
+
+.student-theme {
+  background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
+  color: #15803D;
+}
+
+.staff-theme {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  color: #B45309;
+}
+
+.role-card-content {
+  flex: 1;
+}
+
+.role-card-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.role-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.role-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.student-tag {
+  background-color: #DCFCE7;
+  color: #166534;
+}
+
+.staff-tag {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.role-desc {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.role-check-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #CBD5E1;
+}
+
+.check-icon.checked {
+  color: var(--primary-500);
+}
+
+.role-info-note {
+  margin-top: 24px;
+  padding: 12px 16px;
+  background-color: #F8FAFC;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  color: #64748B;
+  line-height: 1.5;
+  border: 1px dashed #CBD5E1;
+}

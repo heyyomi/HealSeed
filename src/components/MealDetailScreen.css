@@ -1,0 +1,253 @@
+.meal-detail-screen {
+  background-color: var(--bg-card);
+}
+
+.header-school-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.school-pill {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary-700);
+  background-color: var(--primary-100);
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.header-date {
+  font-size: 11.5px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+/* 2-Column Dish Cards */
+.detail-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.detail-dish-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background-color: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: all var(--transition-bounce);
+}
+
+.detail-dish-card:hover {
+  transform: translateY(-2px);
+  border-color: #86EFAC;
+  box-shadow: 0 6px 14px rgba(34, 197, 94, 0.1);
+}
+
+.dish-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.dish-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dish-index {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94A3B8;
+}
+
+.dish-name {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* Extra Info Section (Nutrition / Allergy) */
+.meal-extra-info-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.info-box-item {
+  background-color: #F8FAFC;
+  border: 1px dashed #CBD5E1;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-box-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.info-box-icon {
+  color: #64748B;
+}
+
+.info-box-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.info-box-status {
+  font-size: 11px;
+  color: #94A3B8;
+  line-height: 1.35;
+}
+
+/* Habits Section */
+.meal-habits-section {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.habits-section-desc {
+  font-size: 12px;
+  color: #64748B;
+  line-height: 1.4;
+  margin-top: -4px;
+}
+
+.meal-habit-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.meal-habit-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px;
+  background-color: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-bounce);
+}
+
+.meal-habit-card:hover {
+  transform: translateY(-1px);
+  border-color: #CBD5E1;
+}
+
+.meal-habit-card.checked {
+  background-color: #F0FDF4;
+  border-color: #86EFAC;
+}
+
+.habit-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.habit-badge-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.meal-icon {
+  background-color: #FFF0E9;
+  color: #FB923C;
+}
+
+.time-icon {
+  background-color: #FEF9C3;
+  color: #CA8A04;
+}
+
+.water-icon {
+  background-color: #E0F2FE;
+  color: #0284C7;
+}
+
+.mind-icon {
+  background-color: #F3E8FF;
+  color: #9333EA;
+}
+
+.meal-habit-card.checked .habit-badge-icon {
+  background-color: #DCFCE7;
+  color: #16A34A;
+}
+
+.habit-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.habit-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.habit-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.meal-habit-card.checked .habit-name {
+  color: #166534;
+}
+
+.seed-reward-badge {
+  font-size: 10px;
+  font-weight: 800;
+  background-color: #FEF3C7;
+  color: #B45309;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+}
+
+.meal-habit-card.checked .seed-reward-badge {
+  background-color: #DCFCE7;
+  color: #15803D;
+}
+
+.habit-subtext {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.habit-check-circle {
+  color: #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.habit-check-circle.active {
+  color: var(--primary-500);
+}
