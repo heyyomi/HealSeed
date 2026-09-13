@@ -778,14 +778,16 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
               </div>
             </div>
 
-            {/* 성장 정보 보기 버튼 */}
+            {/* 성장 TIP 버튼 (2줄 포맷) */}
             <div className="companion-card-action-bar">
               <button
                 type="button"
                 className="btn-view-growth-info"
                 onClick={() => setShowGrowthSheet(true)}
+                aria-label="성장 TIP 보기"
               >
-                <span>성장 정보 보기 &gt;</span>
+                <span className="growth-tip-text-line">성장</span>
+                <span className="growth-tip-text-line">TIP💡</span>
               </button>
             </div>
           </section>
