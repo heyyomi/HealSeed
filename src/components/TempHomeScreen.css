@@ -17,6 +17,7 @@
   background-color: #FFFFFF;
   border-bottom: 1px solid #E2E8F0;
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .home-brand {
@@ -892,6 +893,8 @@
   background-color: #FFFFFF;
   border-top: 1px solid #E2E8F0;
   padding: 0 8px;
+  flex-shrink: 0;
+  z-index: 20;
 }
 
 .nav-tab-item {
