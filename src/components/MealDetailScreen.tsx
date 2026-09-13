@@ -67,8 +67,8 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Movement selection
-  const [selectedMovementId, setSelectedMovementId] = useState<string>('walk');
+  // Movement multi-selection
+  const [selectedMovementIds, setSelectedMovementIds] = useState<string[]>(['walk']);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const albumInputRef = useRef<HTMLInputElement>(null);
@@ -89,6 +89,12 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
         // ignore
       }
     }
+  };
+
+  const handleToggleMovement = (id: string) => {
+    setSelectedMovementIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -561,18 +567,21 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
           </span>
         </div>
         <p className="habits-section-desc">
-          식사 후 가볍게 움직이는 것은 기분과 소화를 돕는 건강한 생활습관이에요.
+          식사 후 실천하고 싶은 움직임을 자유롭게 골라보세요. (여러 개 중복 선택 가능 🌱)
         </p>
 
-        {/* Gentle Movement Suggestion Cards */}
+        {/* Gentle Movement Suggestion Cards (Multi-Select) */}
         <div className="movement-cards-list">
           {RECOMMENDED_MOVEMENTS.map((mov) => {
-            const isSelected = selectedMovementId === mov.id;
+            const isSelected = selectedMovementIds.includes(mov.id);
             return (
               <div
                 key={mov.id}
                 className={`movement-card ${isSelected ? 'selected' : ''}`}
-                onClick={() => setSelectedMovementId(mov.id)}
+                onClick={() => handleToggleMovement(mov.id)}
+                role="checkbox"
+                aria-checked={isSelected}
+                tabIndex={0}
               >
                 <div className="movement-card-left">
                   <span className="movement-card-icon">{mov.icon}</span>
@@ -581,8 +590,8 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
                     <span className="movement-card-desc">{mov.desc}</span>
                   </div>
                 </div>
-                <div className={`movement-radio ${isSelected ? 'active' : ''}`}>
-                  <div className="movement-radio-inner" />
+                <div className={`movement-checkbox ${isSelected ? 'active' : ''}`}>
+                  {isSelected && <Check size={14} strokeWidth={3} />}
                 </div>
               </div>
             );
@@ -595,7 +604,11 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
             <div className="movement-already-done-card animate-pop-in">
               <CheckCircle2 size={22} className="done-icon" />
               <div className="done-text-wrap">
-                <strong>오늘의 몸 움직이기 습관을 이미 완료했어요!</strong>
+                <strong>
+                  {selectedMovementIds.length > 0
+                    ? `오늘 ${selectedMovementIds.length}가지 움직임을 실천 중이에요! 👏`
+                    : '오늘의 몸 움직이기 습관을 이미 완료했어요!'}
+                </strong>
                 <span>홈 화면의 "몸 움직이기" 습관(+1 Seed)과 함께 연동되었습니다.</span>
               </div>
             </div>
@@ -604,9 +617,14 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
               type="button"
               className="btn-complete-movement animate-pop-in"
               onClick={handleCompleteMovement}
+              disabled={selectedMovementIds.length === 0}
             >
               <Activity size={18} />
-              <span>선택한 움직임 오늘 실천하기 (+1 Seed)</span>
+              <span>
+                {selectedMovementIds.length > 0
+                  ? `선택한 ${selectedMovementIds.length}가지 움직임 오늘 실천하기 (+1 Seed)`
+                  : '실천할 움직임을 1개 이상 선택해주세요 (+1 Seed)'}
+              </span>
             </button>
           )}
         </div>
