@@ -63,6 +63,10 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
   const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
   const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(false);
   const [openLegalDocument, setOpenLegalDocument] = useState<'privacy' | 'terms' | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const [levelUpCelebration, setLevelUpCelebration] = useState<{
     prevLevel: number;
     newLevel: number;
@@ -125,6 +129,22 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     (todayRecord.mindCare ? 1 : 0);
 
   const isAllCompletedToday = completedTodayCount === 4;
+  const calendarYear = calendarMonth.getFullYear();
+  const calendarMonthIndex = calendarMonth.getMonth();
+  const calendarDays = new Date(calendarYear, calendarMonthIndex + 1, 0).getDate();
+  const calendarStartDay = new Date(calendarYear, calendarMonthIndex, 1).getDay();
+  const calendarEntries = Array.from({ length: calendarStartDay + calendarDays }, (_, index) => {
+    if (index < calendarStartDay) return null;
+    const day = index - calendarStartDay + 1;
+    const date = new Date(calendarYear, calendarMonthIndex, day);
+    const key = getFormattedDate(date);
+    const record = data.dailyRecords[key];
+    const count = record
+      ? Number(record.balancedMeal) + Number(record.water) + Number(record.activity) + Number(record.mindCare)
+      : 0;
+    return { day, key, count, isFuture: key > getFormattedDate(), isToday: key === getFormattedDate() };
+  });
+  const completedCalendarDays = calendarEntries.filter((entry) => entry && !entry.isFuture && entry.count > 0).length;
 
   // Watch for Level-Up moment to trigger gentle celebratory modal (Section 11)
   const prevLevelRef = useRef<number>(levelInfo.level);
@@ -731,6 +751,27 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
             </div>
           </section>
 
+          <section className="home-month-calendar animate-fade-in-up">
+            <div className="month-calendar-header">
+              <div><span>월간 건강습관</span><h3>한 달 실천 달성 현황</h3></div>
+              <div className="month-calendar-nav">
+                <button type="button" onClick={() => setCalendarMonth(new Date(calendarYear, calendarMonthIndex - 1, 1))} aria-label="이전 달"><ChevronLeft size={17} /></button>
+                <strong>{calendarYear}년 {calendarMonthIndex + 1}월</strong>
+                <button type="button" onClick={() => setCalendarMonth(new Date(calendarYear, calendarMonthIndex + 1, 1))} aria-label="다음 달"><ChevronRight size={17} /></button>
+              </div>
+            </div>
+            <div className="month-calendar-summary"><strong>{completedCalendarDays}일</strong><span>건강습관을 하나 이상 실천했어요</span></div>
+            <div className="month-calendar-weekdays">{['일','월','화','수','목','금','토'].map((day) => <span key={day}>{day}</span>)}</div>
+            <div className="month-calendar-grid">
+              {calendarEntries.map((entry, index) => entry ? (
+                <div key={entry.key} className={`${entry.isToday ? 'today' : ''} ${entry.isFuture ? 'future' : ''}`} title={`${entry.key}: ${entry.count}/4 실천`}>
+                  <span>{entry.day}</span><i data-count={entry.isFuture ? 0 : entry.count} />
+                </div>
+              ) : <div key={`empty-${index}`} className="empty" />)}
+            </div>
+            <div className="month-calendar-legend"><span><i data-count="0" /> 미기록</span><span><i data-count="1" /> 1~2개</span><span><i data-count="3" /> 3개</span><span><i data-count="4" /> 모두 완료</span></div>
+          </section>
+
           <div className="legacy-home-details" aria-hidden="true">
           {/* Date Selector Row */}
           <div className="date-navigator-card">
@@ -1184,7 +1225,6 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
           onUpdateSchool={handleUpdateSchool}
           onUpdateWeeklyGoal={handleUpdateWeeklyGoal}
           onResetAll={onReset}
-          onSwitchToAdmin={() => setShowAdminAuthModal(true)}
         />
       )}
 
