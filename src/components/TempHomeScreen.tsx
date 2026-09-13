@@ -14,11 +14,12 @@ import {
   ChevronLeft,
   ChevronRight,
   PartyPopper,
-  Info,
-  Target
+  Target,
+  Award,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import type { OnboardingState, DailyRecord, MealData, SchoolType } from '../types/onboarding';
+import type { OnboardingState, DailyRecord, MealData, SchoolType, PrimaryHabitKey, WeeklyGoal } from '../types/onboarding';
 import { CHARACTERS } from '../data/characters';
 import { CHARACTER_GROWTH_STORIES } from '../data/growthStages';
 import { calculateLevelInfo, getCharacterGrowthImage, getFormattedDate } from '../utils/seedRules';
@@ -48,6 +49,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ title: string; subtitle: string } | null>(null);
   const [showTestPanel, setShowTestPanel] = useState(false);
+  const [showGrowthSheet, setShowGrowthSheet] = useState(false);
 
   // Fetch meal data for current date & school
   useEffect(() => {
@@ -270,9 +272,25 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
   };
 
   const weekDayStats = getWeekDayStats(currentDateString, data.dailyRecords);
-  const weeklyEarnedSeed = weekDayStats.reduce((sum, item) => sum + item.seedCount, 0);
-  const targetSeed = data.weeklyGoal?.targetSeed || 15;
-  const weeklyGoalPercent = Math.min(100, Math.round((weeklyEarnedSeed / targetSeed) * 100));
+
+  // Personal Seed Habit Goal Tracking
+  const targetHabitKey: PrimaryHabitKey = data.weeklyGoal?.habitKey || 'water';
+  const targetDays = data.weeklyGoal?.targetDays || 3;
+  const HABIT_CONFIG: Record<PrimaryHabitKey, { name: string; icon: string; category: string }> = {
+    balancedMeal: { name: '급식 골고루 먹기', icon: '🍽️', category: '식사 습관' },
+    water: { name: '물 자주 마시기', icon: '💧', category: '수분 섭취' },
+    activity: { name: '몸 움직이기', icon: '🏃', category: '신체활동' },
+    mindCare: { name: '마음 돌보기', icon: '💚', category: '마음돌봄' },
+  };
+
+  const weekDaysGoalStatus = weekDayStats.map((day) => {
+    const isDone = !!data.dailyRecords[day.dateStr]?.[targetHabitKey];
+    return {
+      ...day,
+      isDone,
+    };
+  });
+  const achievedDaysCount = weekDaysGoalStatus.filter((d) => d.isDone).length;
 
   // Save meal photo and memo (Section 12)
   const handleSaveMealRecord = (record: { mealImageUrl: string; mealMemo: string }) => {
@@ -295,19 +313,34 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  // Update weekly goal target (1순위)
-  const handleUpdateWeeklyGoal = (newTargetSeed: number) => {
-    onUpdateState((prev) => ({
-      ...prev,
-      weeklyGoal: {
-        ...prev.weeklyGoal,
-        targetSeed: newTargetSeed,
-      },
-    }));
-    setToastMessage({
-      title: '주간 목표 변경 🎯',
-      subtitle: `이번 주 목표가 ${newTargetSeed} Seed로 설정되었습니다.`,
-    });
+  // Update weekly goal target (Supports Seed or Personal Habit Goal)
+  const handleUpdateWeeklyGoal = (goalOrSeed: number | Partial<WeeklyGoal>) => {
+    if (typeof goalOrSeed === 'number') {
+      onUpdateState((prev) => ({
+        ...prev,
+        weeklyGoal: {
+          ...prev.weeklyGoal,
+          targetSeed: goalOrSeed,
+          title: `이번 주 ${goalOrSeed} Seed 심기 🌱`,
+        },
+      }));
+      setToastMessage({
+        title: '주간 목표 변경 🎯',
+        subtitle: `이번 주 목표가 ${goalOrSeed} Seed로 설정되었습니다.`,
+      });
+    } else {
+      onUpdateState((prev) => ({
+        ...prev,
+        weeklyGoal: {
+          ...prev.weeklyGoal,
+          ...goalOrSeed,
+        },
+      }));
+      setToastMessage({
+        title: '건강씨앗 목표 변경 🎯',
+        subtitle: '나의 건강씨앗 목표가 업데이트되었습니다.',
+      });
+    }
     setTimeout(() => setToastMessage(null), 2500);
   };
 
@@ -481,64 +514,16 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                 </div>
               </div>
             </div>
-          </section>
 
-          {/* ================================================== */}
-          {/* 1순위: 나의 주간 건강목표 위젯 (Weekly Goal Widget) */}
-          {/* ================================================== */}
-          <section className="weekly-goal-card animate-pop-in">
-            <div className="goal-card-top-row">
-              <div className="goal-title-group">
-                <div className="goal-icon-badge">
-                  <Target size={16} />
-                </div>
-                <div>
-                  <span className="goal-badge-label">나의 주간 건강목표</span>
-                  <h4 className="goal-heading-text">{data.weeklyGoal?.title || `이번 주 ${targetSeed} Seed 심기 🌱`}</h4>
-                </div>
-              </div>
-              <div className="goal-score-pill">
-                <strong>{weeklyEarnedSeed}</strong>
-                <span>/ {targetSeed} Seed</span>
-              </div>
-            </div>
-
-            <div className="goal-track-wrap">
-              <div className="goal-track-bar">
-                <div
-                  className="goal-track-fill"
-                  style={{ width: `${weeklyGoalPercent}%` }}
-                />
-              </div>
-              <div className="goal-track-info">
-                <span className="goal-encourage-msg">
-                  {weeklyGoalPercent >= 100
-                    ? '🎉 이번 주 목표 달성 완료! 메이트가 쑥쑥 자라요!'
-                    : `목표 달성까지 앞으로 ${Math.max(0, targetSeed - weeklyEarnedSeed)} Seed 남았어요! 🌱`}
-                </span>
-                <span className="goal-track-percent">{weeklyGoalPercent}%</span>
-              </div>
-            </div>
-
-            {/* 7-Day Dot Progress (Mon~Sun) */}
-            <div className="weekly-dots-container">
-              {weekDayStats.map((item) => (
-                <div
-                  key={item.dateStr}
-                  className={`week-dot-col ${item.isCurrent ? 'current' : ''} ${item.seedCount > 0 ? 'achieved' : ''}`}
-                  onClick={() => setCurrentDateString(item.dateStr)}
-                  title={`${item.shortLabel} (${item.dayName}): ${item.seedCount} Seed`}
-                >
-                  <span className="week-dot-day">{item.dayName}</span>
-                  <div className="week-dot-circle">
-                    {item.seedCount > 0 ? (
-                      <span className="dot-seed-num">+{item.seedCount}</span>
-                    ) : (
-                      <span className="dot-empty" />
-                    )}
-                  </div>
-                </div>
-              ))}
+            {/* 성장 정보 보기 버튼 */}
+            <div className="companion-card-action-bar">
+              <button
+                type="button"
+                className="btn-view-growth-info"
+                onClick={() => setShowGrowthSheet(true)}
+              >
+                <span>성장 정보 보기 &gt;</span>
+              </button>
             </div>
           </section>
 
@@ -614,7 +599,12 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                   <Utensils size={18} />
                 </div>
                 <div className="habit-info">
-                  <span className="habit-category">식사 습관</span>
+                  <div className="habit-category-row">
+                    <span className="habit-category">식사 습관</span>
+                    {targetHabitKey === 'balancedMeal' && (
+                      <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                    )}
+                  </div>
                   <span className="habit-title">급식 골고루 먹기</span>
                 </div>
                 <div className="habit-check-action">
@@ -643,7 +633,12 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                   <Droplets size={18} />
                 </div>
                 <div className="habit-info">
-                  <span className="habit-category">수분 섭취</span>
+                  <div className="habit-category-row">
+                    <span className="habit-category">수분 섭취</span>
+                    {targetHabitKey === 'water' && (
+                      <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                    )}
+                  </div>
                   <span className="habit-title">물 충분히 마시기</span>
                 </div>
                 <div className="habit-check-action">
@@ -672,7 +667,12 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                   <Activity size={18} />
                 </div>
                 <div className="habit-info">
-                  <span className="habit-category">신체활동</span>
+                  <div className="habit-category-row">
+                    <span className="habit-category">신체활동</span>
+                    {targetHabitKey === 'activity' && (
+                      <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                    )}
+                  </div>
                   <span className="habit-title">몸 움직이기</span>
                 </div>
                 <div className="habit-check-action">
@@ -701,7 +701,12 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                   <Heart size={18} />
                 </div>
                 <div className="habit-info">
-                  <span className="habit-category">마음돌봄</span>
+                  <div className="habit-category-row">
+                    <span className="habit-category">마음돌봄</span>
+                    {targetHabitKey === 'mindCare' && (
+                      <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                    )}
+                  </div>
                   <span className="habit-title">마음 돌보기</span>
                 </div>
                 <div className="habit-check-action">
@@ -712,36 +717,6 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                     +1 Seed
                   </span>
                 </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Level Threshold Guide Note */}
-          <section className="seed-growth-rules-card">
-            <div className="rules-card-header">
-              <Info size={16} className="info-icon" />
-              <h4 className="rules-card-title">Seed & 메이트 성장 기준</h4>
-            </div>
-            <div className="growth-rules-grid">
-              <div className={`rule-chip ${levelInfo.level === 1 ? 'current' : ''}`}>
-                <span>Lv.1 시작</span>
-                <strong>0~9 Seed</strong>
-              </div>
-              <div className={`rule-chip ${levelInfo.level === 2 ? 'current' : ''}`}>
-                <span>Lv.2 반짝</span>
-                <strong>10~29 Seed</strong>
-              </div>
-              <div className={`rule-chip ${levelInfo.level === 3 ? 'current' : ''}`}>
-                <span>Lv.3 쑥쑥</span>
-                <strong>30~59 Seed</strong>
-              </div>
-              <div className={`rule-chip ${levelInfo.level === 4 ? 'current' : ''}`}>
-                <span>Lv.4 튼튼</span>
-                <strong>60~99 Seed</strong>
-              </div>
-              <div className={`rule-chip ${levelInfo.level === 5 ? 'current' : ''}`}>
-                <span>Lv.5 완전체</span>
-                <strong>100+ Seed</strong>
               </div>
             </div>
           </section>
@@ -822,6 +797,157 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
           <span>MY</span>
         </button>
       </nav>
+
+      {/* ================================================== */}
+      {/* 🌱 나의 HealSeed 성장 Bottom Sheet Modal */}
+      {/* ================================================== */}
+      {showGrowthSheet && (
+        <div
+          className="growth-sheet-overlay animate-fade-in"
+          onClick={() => setShowGrowthSheet(false)}
+        >
+          <div
+            className="growth-sheet-modal animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sheet Handle */}
+            <div className="sheet-handle-bar" />
+
+            {/* Header */}
+            <div className="growth-sheet-header">
+              <div className="sheet-title-row">
+                <span className="sheet-title-emoji">🌱</span>
+                <h3 className="sheet-main-title">나의 HealSeed 성장</h3>
+              </div>
+              <button
+                type="button"
+                className="btn-sheet-close-x"
+                onClick={() => setShowGrowthSheet(false)}
+                aria-label="닫기"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="growth-sheet-content">
+              {/* 1. Seed & 메이트 성장 기준 */}
+              <div className="growth-sheet-box">
+                <div className="sheet-box-title-row">
+                  <Award size={16} className="box-title-icon" />
+                  <strong className="sheet-box-title">Seed & 메이트 성장 기준</strong>
+                </div>
+                <div className="growth-rules-grid">
+                  <div className={`rule-chip ${levelInfo.level === 1 ? 'current' : ''}`}>
+                    <span className="rule-lv-tag">Lv.1 시작</span>
+                    <strong className="rule-seed-val">0~9 Seed</strong>
+                  </div>
+                  <div className={`rule-chip ${levelInfo.level === 2 ? 'current' : ''}`}>
+                    <span className="rule-lv-tag">Lv.2 반짝</span>
+                    <strong className="rule-seed-val">10~29 Seed</strong>
+                  </div>
+                  <div className={`rule-chip ${levelInfo.level === 3 ? 'current' : ''}`}>
+                    <span className="rule-lv-tag">Lv.3 쑥쑥</span>
+                    <strong className="rule-seed-val">30~59 Seed</strong>
+                  </div>
+                  <div className={`rule-chip ${levelInfo.level === 4 ? 'current' : ''}`}>
+                    <span className="rule-lv-tag">Lv.4 튼튼</span>
+                    <strong className="rule-seed-val">60~99 Seed</strong>
+                  </div>
+                  <div className={`rule-chip ${levelInfo.level === 5 ? 'current' : ''}`}>
+                    <span className="rule-lv-tag">Lv.5 완전체</span>
+                    <strong className="rule-seed-val">100+ Seed</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. 주간 건강목표: 이번 주 나의 건강씨앗 */}
+              <div className="growth-sheet-box personal-goal-box">
+                <div className="sheet-box-title-row">
+                  <Target size={16} className="box-title-icon" />
+                  <strong className="sheet-box-title">🌱 이번 주 나의 건강씨앗</strong>
+                </div>
+
+                <div className="sheet-goal-card">
+                  <div className="sheet-goal-header">
+                    <span className="sheet-goal-icon">{HABIT_CONFIG[targetHabitKey].icon}</span>
+                    <div className="sheet-goal-texts">
+                      <strong className="sheet-goal-name">
+                        {data.weeklyGoal?.habitName || HABIT_CONFIG[targetHabitKey].name}
+                      </strong>
+                      <span className="sheet-goal-sub">이번 주 꾸준히 실천할 나의 건강씨앗</span>
+                    </div>
+                  </div>
+
+                  <div className="sheet-goal-stats">
+                    <div className="sheet-stat-col">
+                      <span className="stat-name">목표</span>
+                      <strong className="stat-value">이번 주 {targetDays}일 실천</strong>
+                    </div>
+                    <div className="sheet-stat-col">
+                      <span className="stat-name">현재</span>
+                      <strong className="stat-value highlight">
+                        {achievedDaysCount} / {targetDays}일
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* 7-Day Dots Row (월 ○ 화 ○ 수 ● 목 ○ 금 ○ 토 ○ 일 ○) */}
+                  <div className="sheet-week-dots-row">
+                    {weekDaysGoalStatus.map((day) => (
+                      <div key={day.dateStr} className={`sheet-day-item ${day.isCurrent ? 'today' : ''}`}>
+                        <span className="day-name">{day.dayName}</span>
+                        <span className={`day-circle ${day.isDone ? 'done' : 'empty'}`}>
+                          {day.isDone ? '●' : '○'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Seed vs 나의 건강씨앗 개념 구분 안내 */}
+                <div className="role-distinction-card">
+                  <div className="distinction-row">
+                    <strong className="distinction-badge">🌱 Seed:</strong>
+                    <span className="distinction-desc">
+                      모든 건강습관 실천이 누적되어 HealSeed Mate가 성장하는 전체 성장 포인트
+                    </span>
+                  </div>
+                  <div className="distinction-row">
+                    <strong className="distinction-badge">🎯 나의 건강씨앗:</strong>
+                    <span className="distinction-desc">
+                      사용자가 선택한 특정 건강습관을 이번 주에 꾸준히 실천하는 개인 목표
+                    </span>
+                  </div>
+                </div>
+
+                {/* MY 페이지 이동 버튼 */}
+                <button
+                  type="button"
+                  className="btn-sheet-link-my"
+                  onClick={() => {
+                    setShowGrowthSheet(false);
+                    setActiveTab('my');
+                  }}
+                >
+                  <span>MY 페이지에서 건강목표 변경하기 &gt;</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom Close Button */}
+            <div className="growth-sheet-footer">
+              <button
+                type="button"
+                className="btn-sheet-close-action"
+                onClick={() => setShowGrowthSheet(false)}
+              >
+                <span>닫기</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

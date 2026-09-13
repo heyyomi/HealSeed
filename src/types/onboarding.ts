@@ -84,9 +84,14 @@ export interface MealRecord {
   createdAt: string;
 }
 
+export type PrimaryHabitKey = 'balancedMeal' | 'water' | 'activity' | 'mindCare';
+
 export interface WeeklyGoal {
-  targetSeed: number; // e.g. 15 Seed
-  title: string;
+  habitKey: PrimaryHabitKey; // 'water' (기본값)
+  habitName: string;         // '물 자주 마시기'
+  targetDays: number;        // e.g. 3
+  targetSeed?: number;       // 레거시 호환
+  title?: string;
 }
 
 export type UserRole = 'user' | 'admin';

@@ -14,7 +14,7 @@ import {
   Lock,
   Check
 } from 'lucide-react';
-import type { OnboardingState, SchoolType, SchoolSearchResult } from '../types/onboarding';
+import type { OnboardingState, SchoolType, SchoolSearchResult, PrimaryHabitKey, WeeklyGoal } from '../types/onboarding';
 import { CHARACTERS } from '../data/characters';
 import { calculateLevelInfo, getCharacterGrowthImage } from '../utils/seedRules';
 import { searchSchoolsFromNEIS } from '../services/mealService';
@@ -23,7 +23,7 @@ import './MyScreen.css';
 interface MyScreenProps {
   data: OnboardingState;
   onUpdateSchool: (schoolName: string, schoolType: SchoolType) => void;
-  onUpdateWeeklyGoal?: (targetSeed: number) => void;
+  onUpdateWeeklyGoal?: (goalOrSeed: number | Partial<WeeklyGoal>) => void;
   onResetAll: () => void;
 }
 
@@ -90,7 +90,9 @@ export const MyScreen: React.FC<MyScreenProps> = ({
   // Meal photos count
   const photoCount = Object.keys(data.mealRecords || {}).length;
 
-  const currentWeeklyTarget = data.weeklyGoal?.targetSeed || 15;
+  const currentHabitKey: PrimaryHabitKey = data.weeklyGoal?.habitKey || 'water';
+  const currentTargetDays = data.weeklyGoal?.targetDays || 3;
+  const currentHabitName = data.weeklyGoal?.habitName || '물 자주 마시기';
 
   const handleSelectResult = (item: SchoolSearchResult) => {
     setEditSchoolName(item.schoolName);
@@ -159,7 +161,7 @@ export const MyScreen: React.FC<MyScreenProps> = ({
       </div>
 
       {/* ================================================== */}
-      {/* 1순위: 나의 주간 건강목표 관리 카드 */}
+      {/* 나의 주간 건강목표 관리 카드 (나의 건강씨앗 & 목표 일수) */}
       {/* ================================================== */}
       <div className="my-goal-setting-card animate-fade-in-up">
         <div className="goal-card-header">
@@ -169,26 +171,64 @@ export const MyScreen: React.FC<MyScreenProps> = ({
             </div>
             <div>
               <strong className="goal-main-title">나의 주간 건강목표</strong>
-              <span className="goal-sub-title">일주일 동안 심을 목표 Seed를 설정해요</span>
+              <span className="goal-sub-title">이번 주 집중할 나의 건강씨앗과 실천 일수를 설정해요</span>
             </div>
           </div>
           <div className="goal-current-badge">
-            <span>목표: <strong>{currentWeeklyTarget} Seed</strong></span>
+            <span><strong>{currentHabitName}</strong> (주 {currentTargetDays}일)</span>
           </div>
         </div>
 
-        <div className="goal-preset-buttons">
-          {[10, 15, 20].map((tSeed) => (
-            <button
-              key={tSeed}
-              type="button"
-              className={`goal-preset-btn ${currentWeeklyTarget === tSeed ? 'active' : ''}`}
-              onClick={() => onUpdateWeeklyGoal?.(tSeed)}
-            >
-              {currentWeeklyTarget === tSeed && <Check size={14} />}
-              <span>{tSeed} Seed {tSeed === 15 ? '(추천)' : ''}</span>
-            </button>
-          ))}
+        {/* 1. 나의 건강씨앗 습관 선택 (4종) */}
+        <div className="my-goal-sub-section">
+          <span className="my-goal-sub-label">🌱 이번 주 나의 건강씨앗 습관 선택</span>
+          <div className="goal-habit-choice-grid">
+            {[
+              { key: 'balancedMeal' as PrimaryHabitKey, name: '급식 골고루 먹기', icon: '🍽️' },
+              { key: 'water' as PrimaryHabitKey, name: '물 자주 마시기', icon: '💧' },
+              { key: 'activity' as PrimaryHabitKey, name: '몸 움직이기', icon: '🏃' },
+              { key: 'mindCare' as PrimaryHabitKey, name: '마음 돌보기', icon: '💚' },
+            ].map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`habit-select-chip ${currentHabitKey === item.key ? 'active' : ''}`}
+                onClick={() =>
+                  onUpdateWeeklyGoal?.({
+                    habitKey: item.key,
+                    habitName: item.name,
+                    title: `${item.name} (주 ${currentTargetDays}일)`,
+                  })
+                }
+              >
+                <span>{item.icon} {item.name}</span>
+                {currentHabitKey === item.key && <Check size={13} strokeWidth={3} />}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 2. 주간 목표 일수 선택 (3일 / 4일 / 5일) */}
+        <div className="my-goal-sub-section" style={{ marginTop: '12px' }}>
+          <span className="my-goal-sub-label">📅 목표 실천 일수</span>
+          <div className="goal-preset-buttons">
+            {[3, 4, 5].map((days) => (
+              <button
+                key={days}
+                type="button"
+                className={`goal-preset-btn ${currentTargetDays === days ? 'active' : ''}`}
+                onClick={() =>
+                  onUpdateWeeklyGoal?.({
+                    targetDays: days,
+                    title: `${currentHabitName} (주 ${days}일)`,
+                  })
+                }
+              >
+                {currentTargetDays === days && <Check size={14} />}
+                <span>주 {days}일 {days === 3 ? '(추천)' : ''}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

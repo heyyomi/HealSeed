@@ -927,3 +927,420 @@
   color: #15803D;
 }
 
+/* ================================================== */
+/* Companion Card Action Bar (성장 정보 보기 버튼) */
+/* ================================================== */
+.companion-card-action-bar {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed #E2E8F0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-view-growth-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  background-color: #F0FDF4;
+  border: 1.5px solid #86EFAC;
+  border-radius: var(--radius-pill);
+  color: #15803D;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(34, 197, 94, 0.1);
+}
+
+.btn-view-growth-info:hover {
+  background-color: #DCFCE7;
+  border-color: #22C55E;
+  transform: translateY(-1px);
+}
+
+/* Habit Category & Mini Goal Badge */
+.habit-category-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.my-goal-mini-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background-color: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #86EFAC;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+}
+
+/* ================================================== */
+/* 🌱 나의 HealSeed 성장 Bottom Sheet Modal */
+/* ================================================== */
+.growth-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.growth-sheet-modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  background-color: #FFFFFF;
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.sheet-handle-bar {
+  width: 40px;
+  height: 4px;
+  background-color: #CBD5E1;
+  border-radius: 2px;
+  margin: 10px auto 4px;
+  flex-shrink: 0;
+}
+
+.growth-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid #F1F5F9;
+  flex-shrink: 0;
+}
+
+.sheet-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sheet-title-emoji {
+  font-size: 20px;
+}
+
+.sheet-main-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+}
+
+.btn-sheet-close-x {
+  background: none;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-sheet-close-x:hover {
+  background-color: #F1F5F9;
+  color: #475569;
+}
+
+.growth-sheet-content {
+  padding: 16px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.growth-sheet-box {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-lg);
+  padding: 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sheet-box-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.box-title-icon {
+  color: #16A34A;
+}
+
+.sheet-box-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+/* Rule chips grid inside Bottom Sheet */
+.growth-rules-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+@media (max-width: 380px) {
+  .growth-rules-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.rule-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px;
+  background-color: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.rule-chip.current {
+  background-color: #DCFCE7;
+  border-color: #16A34A;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.2);
+}
+
+.rule-lv-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.rule-chip.current .rule-lv-tag {
+  color: #15803D;
+}
+
+.rule-seed-val {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.rule-chip.current .rule-seed-val {
+  color: #166534;
+}
+
+/* Personal Seed Goal Card */
+.sheet-goal-card {
+  background: linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 100%);
+  border: 1.5px solid #86EFAC;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sheet-goal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sheet-goal-icon {
+  font-size: 26px;
+  width: 40px;
+  height: 40px;
+  background-color: #DCFCE7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sheet-goal-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sheet-goal-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #166534;
+}
+
+.sheet-goal-sub {
+  font-size: 11.5px;
+  color: #64748B;
+}
+
+.sheet-goal-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+}
+
+.sheet-stat-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.stat-value {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.stat-value.highlight {
+  color: #16A34A;
+  font-size: 14px;
+}
+
+/* 7-Day Dots Row */
+.sheet-week-dots-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #FFFFFF;
+  border: 1px solid #DCFCE7;
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  gap: 4px;
+}
+
+.sheet-day-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sheet-day-item.today .day-name {
+  color: #16A34A;
+  font-weight: 800;
+}
+
+.day-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.day-circle {
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.day-circle.done {
+  color: #16A34A;
+}
+
+.day-circle.empty {
+  color: #CBD5E1;
+}
+
+/* Concept Distinction Card */
+.role-distinction-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.distinction-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.distinction-badge {
+  font-size: 11.5px;
+  color: #166534;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.distinction-desc {
+  font-size: 11px;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+.btn-sheet-link-my {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: #16A34A;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.btn-sheet-link-my:hover {
+  text-decoration: underline;
+  color: #15803D;
+}
+
+/* Bottom Close Action */
+.growth-sheet-footer {
+  padding: 12px 20px 24px;
+  border-top: 1px solid #F1F5F9;
+  flex-shrink: 0;
+}
+
+.btn-sheet-close-action {
+  width: 100%;
+  height: 44px;
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+}
+
+.btn-sheet-close-action:hover {
+  filter: brightness(1.05);
+}
+
+

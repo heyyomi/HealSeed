@@ -27,8 +27,11 @@ const initialDefaultState: OnboardingState = {
   dailyRecords: {},
   mealRecords: {},
   weeklyGoal: {
+    habitKey: 'water',
+    habitName: '물 자주 마시기',
+    targetDays: 3,
     targetSeed: 15,
-    title: '이번 주 건강습관 15 Seed 심기 🌱',
+    title: '물 자주 마시기',
   },
 };
 
@@ -49,9 +52,12 @@ export const App: React.FC = () => {
           level,
           dailyRecords: parsed.dailyRecords || {},
           mealRecords: parsed.mealRecords || {},
-          weeklyGoal: parsed.weeklyGoal || {
-            targetSeed: 15,
-            title: '이번 주 건강습관 15 Seed 심기 🌱',
+          weeklyGoal: {
+            habitKey: parsed.weeklyGoal?.habitKey || 'water',
+            habitName: parsed.weeklyGoal?.habitName || '물 자주 마시기',
+            targetDays: parsed.weeklyGoal?.targetDays || 3,
+            targetSeed: parsed.weeklyGoal?.targetSeed || 15,
+            title: parsed.weeklyGoal?.title || '물 자주 마시기',
           },
         };
       }
