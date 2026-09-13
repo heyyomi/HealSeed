@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Edit3, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, Edit3, Sparkles } from 'lucide-react';
 import type { WeeklyGoal } from '../types/onboarding';
 import { getGoalIcon } from '../utils/weeklyGoalUtils';
 import './WeeklyGoalSummaryCard.css';
@@ -9,6 +9,7 @@ interface WeeklyGoalSummaryCardProps {
   currentDateString: string;
   onOpenEdit: () => void;
   onToggleCustomPractice?: (dateStr: string) => void;
+  onPracticePreset?: () => void;
 }
 
 export const WeeklyGoalSummaryCard: React.FC<WeeklyGoalSummaryCardProps> = ({
@@ -16,6 +17,7 @@ export const WeeklyGoalSummaryCard: React.FC<WeeklyGoalSummaryCardProps> = ({
   currentDateString,
   onOpenEdit,
   onToggleCustomPractice,
+  onPracticePreset,
 }) => {
   const icon = getGoalIcon(goal);
   const isCustom = goal.type === 'custom';
@@ -93,6 +95,21 @@ export const WeeklyGoalSummaryCard: React.FC<WeeklyGoalSummaryCardProps> = ({
           <span className="custom-practice-hint">
             * 직접 작성한 건강목표는 추가 Seed 없이 이번 주 실천 기록으로만 안전하게 누적돼요.
           </span>
+        </div>
+      )}
+
+      {!isCustom && onPracticePreset && (
+        <div className="preset-practice-action-box">
+          <span className="preset-practice-hint">
+            {goal.habitType === 'water' && '홈에서 물 5컵을 채우면 오늘 1일 실천으로 기록돼요.'}
+            {goal.habitType === 'meal' && '급식 탭에서 골고루 먹기를 완료하면 오늘 1일 실천으로 기록돼요.'}
+            {goal.habitType === 'activity' && '운동 탭에서 움직임을 완료하면 오늘 1일 실천으로 기록돼요.'}
+            {goal.habitType === 'mind' && '마음 탭에서 챕터를 완료하면 오늘 1일 실천으로 기록돼요.'}
+          </span>
+          <button type="button" className={`btn-preset-practice ${isDoneToday ? 'done' : ''}`} onClick={onPracticePreset}>
+            <span>{isDoneToday ? '오늘 목표 완료' : '오늘 실천하기'}</span>
+            {isDoneToday ? <Check size={14} /> : <ArrowRight size={14} />}
+          </button>
         </div>
       )}
     </div>

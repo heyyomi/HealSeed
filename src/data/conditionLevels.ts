@@ -33,7 +33,7 @@ export const CONDITION_OPTIONS: ConditionOption[] = [
   {
     level: 4,
     label: '조금 지쳐요',
-    emoji: '😮💨',
+    emoji: '🥱',
     description: '몸이나 마음이 조금 지쳐서 휴식이 필요해요',
     expressionHint: '후~ 하고 숨을 내쉬는 표정',
   },

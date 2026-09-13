@@ -757,7 +757,8 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                 </div>
               </div>
               <div className="mate-name-badge">
-                <span>{character.name} ({currentGrowthStory?.storyTitle || character.tagline})</span>
+                <strong>{character.name}</strong>
+                <span>({currentGrowthStory?.storyTitle || character.tagline})</span>
               </div>
             </div>
 
@@ -814,6 +815,14 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
             currentDateString={getFormattedDate()}
             onOpenEdit={() => setShowWeeklyGoalModal(true)}
             onToggleCustomPractice={handleToggleCustomPractice}
+            onPracticePreset={() => {
+              if (weeklyGoal.habitType === 'meal') setActiveTab('meal');
+              if (weeklyGoal.habitType === 'activity') setActiveTab('movement');
+              if (weeklyGoal.habitType === 'mind') setActiveTab('mind');
+              if (weeklyGoal.habitType === 'water') {
+                window.setTimeout(() => document.getElementById('home-water-tracker')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
+              }
+            }}
           />
 
           <section className="home-overview-card animate-fade-in-up">
@@ -831,7 +840,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
             </div>
             <div className="home-summary-grid">
               <button type="button" className="meal-summary-card" onClick={() => setActiveTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '실천 완료' : '기록하기'}</b></button>
-              <div className={`home-water-cup-card ${todayRecord.water ? 'done' : ''}`}>
+              <div id="home-water-tracker" className={`home-water-cup-card ${todayRecord.water ? 'done' : ''}`}>
                 <div className="water-cup-heading"><Droplets /><span><strong>물 마시기</strong><small>{todayWaterCups}/5컵 · 5컵 완료 시 +1 Seed</small></span><b>{todayRecord.water ? '완료' : `${todayWaterCups}컵`}</b></div>
                 <div className="water-cup-buttons">{[1, 2, 3, 4, 5].map((cup) => <button key={cup} type="button" className={cup <= todayWaterCups ? 'filled' : ''} onClick={() => handleSetWaterCups(cup)} aria-label={`물 ${cup}컵 기록`} aria-pressed={cup <= todayWaterCups}><GlassWater size={21} /><small>{cup}</small></button>)}</div>
               </div>

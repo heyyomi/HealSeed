@@ -322,10 +322,26 @@
   background-color: #F1F5F9;
   padding: 2px 7px;
   border-radius: var(--radius-pill);
-  max-width: 105px;
+  width: 118px;
+  max-width: 118px;
+  min-height: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.mate-name-badge strong,
+.mate-name-badge span {
+  display: block;
+  max-width: 100%;
+}
+
+.mate-name-badge span {
+  font-size: 9px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .companion-stats-col {
@@ -2504,4 +2520,11 @@
 
 #tab-meal.active {
   color: #f97316;
+}
+.home-scroll-area > .weekly-goal-summary-card {
+  margin-bottom: 0;
+}
+
+.home-condition-options button span {
+  white-space: nowrap;
 }
