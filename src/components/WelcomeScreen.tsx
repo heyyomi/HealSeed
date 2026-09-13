@@ -5,9 +5,10 @@ import './WelcomeScreen.css';
 
 interface WelcomeScreenProps {
   onStart: () => void;
+  onSelectAdminRole?: () => void;
 }
 
-export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
+export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart, onSelectAdminRole }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   return (
@@ -77,7 +78,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
           id="btn-welcome-login"
         >
           <span>이미 계정이 있어요?</span>
-          <strong>로그인</strong>
+          <strong>로그인 / 관리자</strong>
         </button>
 
         <div className="safe-badge">
@@ -86,28 +87,55 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
         </div>
       </div>
 
-      {/* Login Demo Modal */}
+      {/* Login / Admin Demo Modal (Section 2) */}
       {showLoginModal && (
         <div className="modal-backdrop" onClick={() => setShowLoginModal(false)}>
           <div className="modal-card animate-pop-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-emoji">🏫</div>
-            <h3 className="modal-title">학교 계정 로그인 안내</h3>
+            <h3 className="modal-title">학교 계정 로그인</h3>
             <p className="modal-desc">
-              기존에 생성된 학교 계정 로그인 및 Firebase Auth 연동은 다음 단계에서 연결될 예정입니다.
-              <br /><br />
-              먼저 온보딩으로 나만의 캐릭터와 초기 설정을 체험해보세요!
+              테스트할 사용자 역할을 선택해주세요.
+              <br />
+              (향후 Firebase Authentication 로그인 시 자동 분기됩니다.)
             </p>
-            <div className="modal-btn-row">
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px', width: '100%' }}>
               <button
+                type="button"
                 className="btn-primary"
                 onClick={() => {
                   setShowLoginModal(false);
                   onStart();
                 }}
+                id="btn-login-student"
               >
-                새로 시작해보기
+                <span>🎒 학생 / 교직원 일반 사용자 시작</span>
               </button>
+
               <button
+                type="button"
+                className="btn-subtle"
+                style={{
+                  backgroundColor: '#0F172A',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  height: '46px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+                onClick={() => {
+                  setShowLoginModal(false);
+                  onSelectAdminRole?.();
+                }}
+                id="btn-login-admin"
+              >
+                <span>👩‍🏫 학교 관리자(보건교사) 대시보드 진입</span>
+              </button>
+
+              <button
+                type="button"
                 className="btn-subtle"
                 onClick={() => setShowLoginModal(false)}
               >

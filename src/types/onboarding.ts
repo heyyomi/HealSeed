@@ -88,9 +88,12 @@ export interface WeeklyGoal {
   title: string;
 }
 
+export type UserRole = 'user' | 'admin';
+
 export interface OnboardingState {
   step: 'welcome' | 'role' | 'character' | 'preview' | 'nickname' | 'school' | 'home';
   userType: UserType | null;
+  role: UserRole; // 'user' (학생/교직원) | 'admin' (학교 보건교사/운영자)
   characterId: CharacterId | null;
   nickname: string;
   schoolName: string;

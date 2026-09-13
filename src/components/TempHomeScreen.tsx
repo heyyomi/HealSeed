@@ -385,6 +385,29 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
             <button onClick={() => handleAddTestSeed(100)}>+100 Seed (Lv.5)</button>
             <button onClick={() => onUpdateState((p) => ({ ...p, seed: 0, level: 1 }))}>0 리셋</button>
           </div>
+          <div className="test-admin-row" style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>역할 권한 테스트:</span>
+            <button
+              type="button"
+              style={{
+                backgroundColor: '#0F172A',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '100px',
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+              onClick={() => onUpdateState((p) => ({ ...p, role: 'admin', userType: 'staff' }))}
+              id="btn-test-switch-admin"
+            >
+              👩‍🏫 보건교사 관리자 모드로 전환
+            </button>
+          </div>
         </div>
       )}
 

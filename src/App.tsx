@@ -6,7 +6,8 @@ import { GrowthPreviewScreen } from './components/GrowthPreviewScreen';
 import { NicknameScreen } from './components/NicknameScreen';
 import { SchoolSelectScreen } from './components/SchoolSelectScreen';
 import { TempHomeScreen } from './components/TempHomeScreen';
-import type { OnboardingState, UserType, CharacterId, SchoolType } from './types/onboarding';
+import { AdminLayout } from './components/admin/AdminLayout';
+import type { OnboardingState, UserType, CharacterId, SchoolType, UserRole } from './types/onboarding';
 import { calculateLevelInfo } from './utils/seedRules';
 
 const STORAGE_KEY = 'healseed_onboarding_data_v3';
@@ -14,6 +15,7 @@ const STORAGE_KEY = 'healseed_onboarding_data_v3';
 const initialDefaultState: OnboardingState = {
   step: 'welcome',
   userType: null,
+  role: 'user',
   characterId: null,
   nickname: '',
   schoolName: '숭곡중학교',
@@ -39,6 +41,7 @@ export const App: React.FC = () => {
         const level = calculateLevelInfo(parsed.seed || 0).level;
         return {
           ...parsed,
+          role: parsed.role || 'user',
           schoolName: parsed.schoolName || '숭곡중학교',
           schoolType: parsed.schoolType || 'middle',
           schoolCode: parsed.schoolCode || null,
@@ -113,10 +116,41 @@ export const App: React.FC = () => {
     setState(initialDefaultState);
   };
 
+  const handleSwitchRole = (newRole: UserRole) => {
+    setState((prev) => ({
+      ...prev,
+      role: newRole,
+      ...(newRole === 'admin' ? { userType: 'staff' as UserType } : {}),
+    }));
+  };
+
+  const handleSelectAdminRole = () => {
+    setState((prev) => ({
+      ...prev,
+      role: 'admin',
+      userType: 'staff',
+    }));
+  };
+
+  // Section 12: Admin Dashboard Routing
+  if (state.role === 'admin') {
+    return (
+      <div className="app-viewport">
+        <AdminLayout
+          data={state}
+          onSwitchRole={handleSwitchRole}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="app-viewport">
       {state.step === 'welcome' && (
-        <WelcomeScreen onStart={handleStartWelcome} />
+        <WelcomeScreen
+          onStart={handleStartWelcome}
+          onSelectAdminRole={handleSelectAdminRole}
+        />
       )}
 
       {state.step === 'role' && (
