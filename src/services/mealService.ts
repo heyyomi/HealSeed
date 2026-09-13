@@ -105,9 +105,19 @@ export async function searchSchoolsFromNEIS(keyword: string): Promise<SchoolSear
  */
 export function isWeekend(dateStr: string): boolean {
   try {
+    if (!dateStr) return false;
+    const clean = dateStr.replace(/[^\d]/g, '');
+    if (clean.length === 8) {
+      const y = parseInt(clean.slice(0, 4), 10);
+      const m = parseInt(clean.slice(4, 6), 10);
+      const d = parseInt(clean.slice(6, 8), 10);
+      const dateObj = new Date(y, m - 1, d);
+      const day = dateObj.getDay();
+      return day === 0 || day === 6; // 0: Sunday, 6: Saturday
+    }
     const d = new Date(dateStr);
     const day = d.getDay();
-    return day === 0 || day === 6; // 0: Sunday, 6: Saturday
+    return day === 0 || day === 6;
   } catch {
     return false;
   }
