@@ -60,7 +60,7 @@
   white-space: nowrap;
 }
 
-/* Detail Screen Weekend / Holiday No-Meal Banner */
+/* Weekend / Holiday No-Meal Banner */
 .detail-no-meal-banner {
   background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
   border: 1.5px solid #CBD5E1;
@@ -133,7 +133,9 @@
   line-height: 1.5;
 }
 
-/* 2-Column Dish Cards */
+/* ================================================== */
+/* 1. 오늘의 급식 메뉴 2-Column Grid */
+/* ================================================== */
 .detail-menu-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -177,97 +179,246 @@
 }
 
 .dish-name {
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--text-primary);
+  line-height: 1.35;
 }
 
-/* Extra Info Section (Nutrition / Allergy) */
-.meal-extra-info-section {
+/* ================================================== */
+/* 2. 영양 · 알레르기 정보 영역 (단순화) */
+/* ================================================== */
+.meal-simplified-nutrition-section {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-xl);
+  padding: 16px 16px;
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 16px;
+  gap: 12px;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.03);
 }
 
-.info-box-item {
-  background-color: #F8FAFC;
-  border: 1.5px solid #E2E8F0;
-  border-radius: var(--radius-lg);
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
+.nutrition-section-icon {
+  color: #16A34A;
+}
+
+.info-live-source {
+  font-size: 11px;
+  font-weight: 700;
+  color: #15803D;
+  background-color: #DCFCE7;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+/* 2-1. 핵심 4대 영양소 그리드 (열량, 탄수화물, 단백질, 지방) */
+.core-nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
 
-.nutrition-box {
-  background: linear-gradient(180deg, #F0FDF4 0%, #FFFFFF 100%);
-  border-color: #BBF7D0;
+@media (max-width: 380px) {
+  .core-nutrition-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.allergy-box {
+.core-nutrient-card {
+  background-color: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-align: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
+.core-nutrient-card:hover {
+  border-color: #86EFAC;
+  transform: translateY(-1px);
+}
+
+.core-nutrient-card.calorie-card {
   background: linear-gradient(180deg, #FFFBEB 0%, #FFFFFF 100%);
   border-color: #FDE68A;
 }
 
-.info-box-header {
+.nutrient-label-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 3px;
 }
 
-.apple-icon {
-  color: #16A34A;
+.calorie-icon {
+  color: #EA580C;
 }
 
-.alert-icon {
+.nutrient-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.core-nutrient-card.calorie-card .nutrient-label {
+  color: #B45309;
+}
+
+.nutrient-val {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.core-nutrient-card.calorie-card .nutrient-val {
   color: #D97706;
 }
 
-.info-box-title {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.info-box-status {
+.nutrition-empty-note {
+  grid-column: 1 / -1;
   font-size: 12px;
   color: #64748B;
-  line-height: 1.4;
+  text-align: center;
+  padding: 8px 0;
 }
 
-/* Nutrition Chips */
-.nutrition-chips-wrap {
+/* 2-2. [영양정보 더보기] 아코디언 */
+.nutrition-more-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.btn-nutrition-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background-color: #F1F5F9;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-nutrition-toggle:hover {
+  background-color: #E2E8F0;
+  color: #1E293B;
+}
+
+.expanded-nutrition-chips {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
+  width: 100%;
+  padding: 10px;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
 }
 
-.nutrition-chip {
+.sub-nutrition-chip {
   display: inline-flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 5px;
   background-color: #FFFFFF;
-  border: 1px solid #86EFAC;
-  padding: 4px 9px;
+  border: 1px solid #CBD5E1;
+  padding: 4px 10px;
   border-radius: var(--radius-pill);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.ntr-name {
+.sub-ntr-name {
   font-size: 11px;
-  color: #475569;
   font-weight: 600;
+  color: #475569;
 }
 
-.ntr-amount {
-  font-size: 12px;
+.sub-ntr-amount {
+  font-size: 11.5px;
+  font-weight: 800;
   color: #15803D;
+}
+
+/* 2-3. 알레르기 정보 한 줄 카드 */
+.allergy-accordion-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.allergy-single-line-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background-color: #FFFBEB;
+  border: 1.5px solid #FDE68A;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.allergy-single-line-card:hover {
+  background-color: #FEF3C7;
+  border-color: #F59E0B;
+  transform: translateY(-1px);
+}
+
+.allergy-single-line-card.expanded {
+  background-color: #FEF3C7;
+  border-color: #F59E0B;
+}
+
+.allergy-card-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.allergy-alert-emoji {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.allergy-card-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #92400E;
+}
+
+.allergy-card-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #B45309;
+  font-size: 12px;
   font-weight: 800;
 }
 
-/* Allergy Tags */
-.allergy-chips-wrap {
+.allergy-detail-expanded {
+  padding: 10px 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-md);
+}
+
+.allergy-tags-wrap {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -283,153 +434,21 @@
   border-radius: var(--radius-pill);
 }
 
-/* Habits Section */
-.meal-habits-section {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.habits-section-desc {
+.allergy-safe-text {
   font-size: 12px;
   color: #64748B;
-  line-height: 1.4;
-  margin-top: -4px;
+  margin: 0;
 }
 
-.meal-habit-card-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.meal-habit-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 14px;
-  background-color: #FFFFFF;
-  border: 1.5px solid #E2E8F0;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all var(--transition-bounce);
-}
-
-.meal-habit-card:hover {
-  transform: translateY(-1px);
-  border-color: #CBD5E1;
-}
-
-.meal-habit-card.checked {
-  background-color: #F0FDF4;
-  border-color: #86EFAC;
-}
-
-.habit-card-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.habit-badge-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.meal-icon {
-  background-color: #FFF0E9;
-  color: #FB923C;
-}
-
-.time-icon {
-  background-color: #FEF9C3;
-  color: #CA8A04;
-}
-
-.water-icon {
-  background-color: #E0F2FE;
-  color: #0284C7;
-}
-
-.mind-icon {
-  background-color: #F3E8FF;
-  color: #9333EA;
-}
-
-.meal-habit-card.checked .habit-badge-icon {
-  background-color: #DCFCE7;
-  color: #16A34A;
-}
-
-.habit-text-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.habit-name-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.habit-name {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.meal-habit-card.checked .habit-name {
-  color: #166534;
-}
-
-.seed-reward-badge {
-  font-size: 10px;
-  font-weight: 800;
-  background-color: #FEF3C7;
-  color: #B45309;
-  padding: 1px 6px;
-  border-radius: var(--radius-pill);
-}
-
-.meal-habit-card.checked .seed-reward-badge {
-  background-color: #DCFCE7;
-  color: #15803D;
-}
-
-.habit-subtext {
-  font-size: 11.5px;
-  color: var(--text-secondary);
-  line-height: 1.35;
-}
-
-.habit-check-circle {
-  color: #CBD5E1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.habit-check-circle.active {
-  color: var(--primary-500);
-}
-
-/* ========================================= */
-/* 12. 오늘의 한 끼 기록 📸 Section Styles */
-/* ========================================= */
+/* ================================================== */
+/* 3. 오늘의 한 끼 기록 📸 영역 */
+/* ================================================== */
 .meal-photo-record-section {
   background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
   border: 1px solid #E2E8F0;
   border-radius: var(--radius-xl);
-  padding: 20px 18px;
+  padding: 16px 16px;
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -451,7 +470,7 @@
   font-weight: 700;
   padding: 3px 8px;
   border-radius: var(--radius-pill);
-  border: 1px solid #E2E8F0;
+  border: 1px solid #CBD5E1;
 }
 
 .photo-error-alert {
@@ -467,103 +486,91 @@
   font-weight: 600;
 }
 
-/* Photo Upload Placeholder Card */
-.photo-upload-container {
-  background-color: #F8FAFC;
-  border: 2px dashed #CBD5E1;
-  border-radius: var(--radius-lg);
-  padding: 24px 16px;
-  text-align: center;
-  transition: all 0.2s ease;
-}
-
-.photo-upload-placeholder {
+/* 3-2. 기본 콤팩트 카드 (“오늘의 급식판을 기록해볼까요?” + [사진 남기기]) */
+.compact-photo-invite-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 100%);
+  border: 1.5px solid #BBF7D0;
+  border-radius: var(--radius-lg);
+  padding: 14px 14px;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.05);
 }
 
-.upload-icon-circle {
-  width: 56px;
-  height: 56px;
+@media (max-width: 440px) {
+  .compact-photo-invite-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+}
+
+.invite-content-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.invite-icon-wrap {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
   color: #16A34A;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 4px;
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
 }
 
-.upload-placeholder-title {
-  font-size: 15px;
+.invite-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.invite-main-text {
+  font-size: 14px;
   font-weight: 800;
   color: #1E293B;
 }
 
-.upload-placeholder-desc {
-  font-size: 12px;
+.invite-sub-text {
+  font-size: 11.5px;
   color: #64748B;
-  line-height: 1.45;
-  max-width: 320px;
-  margin-bottom: 6px;
+  line-height: 1.35;
 }
 
-.photo-btn-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  max-width: 340px;
-}
-
-.btn-camera-trigger,
-.btn-album-trigger {
-  flex: 1;
+.btn-compact-photo-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 42px;
-  font-size: 13px;
-  font-weight: 800;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-camera-trigger {
+  height: 40px;
+  padding: 0 16px;
   background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
   color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 800;
   border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
   box-shadow: 0 3px 10px rgba(22, 163, 74, 0.25);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.btn-camera-trigger:hover {
+.btn-compact-photo-action:hover {
   filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
-.btn-album-trigger {
-  background-color: #FFFFFF;
-  color: #334155;
-  border: 1.5px solid #CBD5E1;
-}
-
-.btn-album-trigger:hover {
-  background-color: #F1F5F9;
-  border-color: #94A3B8;
-}
-
-.photo-compressing-text {
-  font-size: 12px;
-  color: var(--primary-600);
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-/* Photo Preview & Memo Box */
+/* 3-1. 사진 미리보기 및 메모 카드 */
 .meal-photo-preview-card {
   display: flex;
   flex-direction: column;
@@ -600,7 +607,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(22, 163, 74, 0.9);
+  background: rgba(22, 163, 74, 0.95);
   color: #FFFFFF;
   font-size: 11px;
   font-weight: 800;
@@ -610,17 +617,17 @@
 }
 
 .meal-memo-box {
-  padding: 14px 16px 16px;
+  padding: 12px 14px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .memo-label {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 800;
   color: #334155;
 }
@@ -637,10 +644,10 @@
   flex-shrink: 0;
   font-size: 11px;
   font-weight: 700;
-  padding: 5px 9px;
+  padding: 4px 9px;
   background-color: #F8FAFC;
   color: #475569;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #CBD5E1;
   border-radius: var(--radius-pill);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -662,10 +669,10 @@
   background-color: #F8FAFC;
   border: 1.5px solid #E2E8F0;
   border-radius: var(--radius-md);
-  padding: 10px 12px;
+  padding: 8px 10px;
   resize: none;
-  transition: border-color 0.2s ease;
   outline: none;
+  transition: border-color 0.2s ease;
 }
 
 .meal-memo-input:focus {
@@ -677,7 +684,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .btn-save-photo {
@@ -686,7 +693,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 40px;
+  height: 38px;
   background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
   color: #FFFFFF;
   font-size: 13px;
@@ -694,8 +701,8 @@
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+  transition: all 0.2s ease;
 }
 
 .btn-save-photo.saved {
@@ -707,7 +714,7 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  height: 40px;
+  height: 38px;
   padding: 0 12px;
   background-color: #F1F5F9;
   color: #475569;
@@ -719,8 +726,8 @@
 }
 
 .btn-remove-photo {
-  height: 40px;
-  padding: 0 10px;
+  height: 38px;
+  padding: 0 8px;
   background-color: transparent;
   color: #94A3B8;
   border: none;
@@ -733,35 +740,49 @@
   color: #EF4444;
 }
 
-.photo-philosophy-banner {
+.photo-compressing-text {
+  font-size: 11.5px;
+  color: var(--primary-600);
+  font-weight: 700;
+}
+
+.photo-private-notice {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
   background-color: #F0FDF4;
   border: 1px solid #DCFCE7;
   border-radius: var(--radius-md);
-  padding: 10px 12px;
-  font-size: 11.5px;
+  padding: 8px 10px;
+  font-size: 11px;
   color: #166534;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
-/* ========================================= */
-/* 14 & 15. 오늘의 움직임 추천 🏃 Section */
-/* ========================================= */
+/* ================================================== */
+/* 4. 오늘의 10분 움직임 🏃 영역 */
+/* ================================================== */
 .movement-recommend-section {
   background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);
   border: 1px solid #BBF7D0;
   border-radius: var(--radius-xl);
-  padding: 20px 18px;
+  padding: 16px 16px;
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.06);
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.05);
 }
 
-.movement-section-emoji {
-  font-size: 18px;
+.movement-title-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.movement-subtitle {
+  font-size: 11.5px;
+  color: #64748B;
 }
 
 .movement-sync-pill {
@@ -778,45 +799,143 @@
   color: #15803D;
 }
 
-.movement-cards-list {
+/* 4-1. 기본 화면: 추천 움직임 1개만 표시 카드 */
+.featured-movement-card {
+  background-color: #FFFFFF;
+  border: 1.5px solid #86EFAC;
+  border-radius: var(--radius-lg);
+  padding: 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 2px 10px rgba(34, 197, 94, 0.08);
+}
+
+.featured-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.featured-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: #DCFCE7;
+  color: #15803D;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.featured-intensity-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.featured-main-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.featured-icon {
+  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  background-color: #F0FDF4;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.featured-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.featured-name {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #166534;
+}
+
+.featured-desc {
+  font-size: 12px;
+  color: #64748B;
+}
+
+/* 4-2. [다른 움직임 보기] 아코디언 */
+.other-movements-toggle-wrap {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.movement-card {
+.btn-toggle-other-movements {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  align-self: center;
+  padding: 6px 14px;
+  background-color: #FFFFFF;
+  color: #15803D;
+  border: 1px solid #86EFAC;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-toggle-other-movements:hover {
+  background-color: #F0FDF4;
+}
+
+.other-movements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.movement-choice-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 10px 12px;
   background-color: #FFFFFF;
   border: 1.5px solid #E2E8F0;
-  border-radius: var(--radius-lg);
-  padding: 12px 14px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-.movement-card:hover {
+.movement-choice-card:hover {
   border-color: #86EFAC;
-  background-color: #FAFCF9;
+  background-color: #F0FDF4;
 }
 
-.movement-card.selected {
+.movement-choice-card.active {
   border-color: #22C55E;
   background-color: #F0FDF4;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.12);
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.1);
 }
 
-.movement-card-left {
+.movement-choice-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.movement-card-icon {
-  font-size: 22px;
-  width: 36px;
-  height: 36px;
+.choice-icon {
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
   background-color: #F8FAFC;
   border-radius: 50%;
   display: flex;
@@ -825,60 +944,177 @@
   flex-shrink: 0;
 }
 
-.movement-card.selected .movement-card-icon {
+.movement-choice-card.active .choice-icon {
   background-color: #DCFCE7;
 }
 
-.movement-card-texts {
+.choice-texts {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
-.movement-card-title {
-  font-size: 13.5px;
+.choice-title {
+  font-size: 13px;
   font-weight: 800;
   color: #1E293B;
 }
 
-.movement-card.selected .movement-card-title {
+.movement-choice-card.active .choice-title {
   color: #166534;
 }
 
-.movement-card-desc {
-  font-size: 11.5px;
+.choice-desc {
+  font-size: 11px;
   color: #64748B;
 }
 
-.movement-checkbox {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
+.choice-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   border: 2px solid #CBD5E1;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background-color: #FFFFFF;
   color: transparent;
+  transition: all 0.15s ease;
 }
 
-.movement-checkbox.active {
+.choice-radio.selected {
   border-color: #22C55E;
-  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  background: #22C55E;
   color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
-  transform: scale(1.05);
 }
 
-.movement-action-box {
+/* 4-3. 실제 움직인 시간 기록 박스 */
+.movement-duration-box {
+  background-color: #FFFFFF;
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.duration-question-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #334155;
+}
+
+.duration-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.duration-chip {
+  flex: 1;
+  min-width: 54px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F8FAFC;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.duration-chip:hover {
+  border-color: #86EFAC;
+  color: #15803D;
+}
+
+.duration-chip.active {
+  background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
+  border-color: #22C55E;
+  color: #15803D;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15);
+}
+
+.custom-duration-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.custom-duration-input {
+  width: 80px;
+  height: 36px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0F172A;
+  border: 1.5px solid #22C55E;
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.input-unit {
+  font-size: 12px;
+  color: #475569;
+  font-weight: 600;
+}
+
+/* 선택 요약 배너 */
+.movement-selection-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #F8FAFC;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
   margin-top: 4px;
+}
+
+.summary-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.summary-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.summary-icon {
+  font-size: 14px;
+}
+
+.summary-name {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.summary-time {
+  font-size: 12px;
+  font-weight: 800;
+  color: #16A34A;
+}
+
+/* 4-4. 실천 완료 버튼 */
+.movement-action-container {
+  margin-top: 2px;
 }
 
 .btn-complete-movement {
   width: 100%;
-  height: 48px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -890,7 +1126,7 @@
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.25);
   transition: all 0.2s ease;
 }
 
@@ -899,65 +1135,164 @@
   transform: translateY(-1px);
 }
 
-.btn-complete-movement:disabled {
-  background: #E2E8F0;
-  color: #94A3B8;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-}
-
-.movement-already-done-card {
+.movement-done-badge-card {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background-color: #DCFCE7;
   border: 1px solid #86EFAC;
   border-radius: var(--radius-lg);
   padding: 12px 14px;
 }
 
-.done-icon {
+.done-check-icon {
   color: #16A34A;
   flex-shrink: 0;
 }
 
-.done-text-wrap {
+.done-banner-texts {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
-.done-text-wrap strong {
+.done-banner-texts strong {
   font-size: 13px;
   color: #166534;
 }
 
-.done-text-wrap span {
-  font-size: 11.5px;
+.done-banner-texts span {
+  font-size: 11px;
   color: #15803D;
 }
 
-.movement-advice-banner {
+/* 7. 건강한 일상 습관 철학 배너 (칼로리 상쇄 금지 메시지) */
+.movement-philosophy-banner {
   background-color: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: var(--radius-md);
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
-.advice-main-quote {
-  font-size: 12.5px;
+.philosophy-quote {
+  font-size: 12px;
   font-weight: 800;
-  color: #1E293B;
-  margin: 0;
+  color: #166534;
 }
 
-.advice-sub-text {
+.philosophy-detail {
   font-size: 11px;
   color: #64748B;
   line-height: 1.4;
 }
 
+/* Bottom Action Area */
+.bottom-action-area {
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+/* Photo Choice Modal (카메라 / 앨범) */
+.photo-choice-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.photo-choice-sheet {
+  width: 100%;
+  max-width: 480px;
+  background-color: #FFFFFF;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.choice-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.choice-sheet-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.btn-close-sheet {
+  background: none;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.btn-close-sheet:hover {
+  background-color: #F1F5F9;
+  color: #475569;
+}
+
+.choice-sheet-desc {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+}
+
+.choice-sheet-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-sheet-action {
+  width: 100%;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-sheet-action.camera-btn {
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+}
+
+.btn-sheet-action.camera-btn:hover {
+  filter: brightness(1.05);
+}
+
+.btn-sheet-action.album-btn {
+  background-color: #F8FAFC;
+  color: #334155;
+  border: 1.5px solid #CBD5E1;
+}
+
+.btn-sheet-action.album-btn:hover {
+  background-color: #F1F5F9;
+  border-color: #94A3B8;
+}

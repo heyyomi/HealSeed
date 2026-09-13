@@ -4,10 +4,6 @@ import {
   UtensilsCrossed,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
-  Heart,
-  Droplets,
-  Clock,
   Apple,
   ShieldCheck,
   Camera,
@@ -16,7 +12,12 @@ import {
   RotateCcw,
   Lock,
   Activity,
-  Smile
+  Smile,
+  ChevronDown,
+  ChevronUp,
+  ChevronRight,
+  Flame,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { MealData, DailyRecord, MealRecord } from '../types/onboarding';
@@ -41,13 +42,59 @@ const MEMO_PRESETS = [
   '내 몸의 기분 좋은 배부름을 느꼈어요. 🥗',
 ];
 
-const RECOMMENDED_MOVEMENTS = [
-  { id: 'walk', icon: '🚶', title: '식사 후 10분 가볍게 걷기', desc: '소화를 돕고 나른함을 깨우는 기분 좋은 발걸음' },
-  { id: 'stretch', icon: '🧘', title: '5분 스트레칭하기', desc: '목과 어깨, 허리를 시원하게 펴주는 편안한 스트레칭' },
-  { id: 'stairs', icon: '🪜', title: '가까운 층은 계단 이용하기', desc: '엘리베이터 대신 한두 층 계단으로 튼튼하게 오르기' },
-  { id: 'break-walk', icon: '🌳', title: '쉬는 시간에 잠깐 걸어보기', desc: '친구와 함께 복도나 운동장을 여유롭게 거닐기' },
-  { id: 'fun-move', icon: '🏃', title: '오늘 10분 즐겁게 움직여보기', desc: '신나는 음악에 맞춰 가볍게 몸을 흔들고 활력 충전' },
+interface MovementOption {
+  id: string;
+  icon: string;
+  name: string;
+  desc: string;
+  defaultMinutes: number;
+  intensity: string;
+}
+
+const MOVEMENT_OPTIONS: MovementOption[] = [
+  {
+    id: 'walk-10',
+    icon: '🚶',
+    name: '10분 가볍게 걷기',
+    desc: '운동장 또는 복도 10분 걷기',
+    defaultMinutes: 10,
+    intensity: '가볍게',
+  },
+  {
+    id: 'stretch-5',
+    icon: '🧘',
+    name: '5분 스트레칭',
+    desc: '목과 어깨, 허리를 시원하게 펴주는 스트레칭',
+    defaultMinutes: 5,
+    intensity: '편안하게',
+  },
+  {
+    id: 'stairs',
+    icon: '🪜',
+    name: '가까운 층 계단 이용하기',
+    desc: '엘리베이터 대신 가까운 층 계단으로 오르기',
+    defaultMinutes: 5,
+    intensity: '활기차게',
+  },
+  {
+    id: 'break-walk',
+    icon: '🌳',
+    name: '쉬는 시간에 잠깐 걷기',
+    desc: '친구와 함께 복도나 교정 거닐기',
+    defaultMinutes: 10,
+    intensity: '가볍게',
+  },
+  {
+    id: 'fun-move',
+    icon: '🏃',
+    name: '10분 즐겁게 움직이기',
+    desc: '신나는 음악과 함께 활력 충전하기',
+    defaultMinutes: 10,
+    intensity: '신나게',
+  },
 ];
+
+const DURATION_PRESETS = [5, 10, 15];
 
 export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
   meal,
@@ -60,42 +107,69 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
 }) => {
   const isNoMeal = meal.isNoMealDay || isWeekend(meal.date);
 
-  // Photo state
+  // Section 2: Nutrition & Allergy Accordions
+  const [showMoreNutrition, setShowMoreNutrition] = useState<boolean>(false);
+  const [showAllergies, setShowAllergies] = useState<boolean>(false);
+
+  // Section 3: Photo State
   const [photoDataUrl, setPhotoDataUrl] = useState<string>(mealRecord?.mealImageUrl || '');
   const [memo, setMemo] = useState<string>(mealRecord?.mealMemo || '');
   const [isPhotoSaved, setIsPhotoSaved] = useState<boolean>(!!mealRecord?.mealImageUrl);
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showPhotoChoiceModal, setShowPhotoChoiceModal] = useState<boolean>(false);
 
-  // Movement multi-selection
-  const [selectedMovementIds, setSelectedMovementIds] = useState<string[]>(['walk']);
+  // Section 4: Movement Selection & Duration Logging
+  const [selectedMovementId, setSelectedMovementId] = useState<string>('walk-10');
+  const [showOtherMovements, setShowOtherMovements] = useState<boolean>(false);
+  const [durationPreset, setDurationPreset] = useState<number | 'custom'>(10);
+  const [customMinutes, setCustomMinutes] = useState<string>('10');
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const albumInputRef = useRef<HTMLInputElement>(null);
 
-  const handleHabitClick = (key: keyof DailyRecord, isPrimarySeedHabit: boolean) => {
-    const willBeDone = !dailyRecord[key];
-    onToggleHabit(key, isPrimarySeedHabit);
+  // Parse Core Nutrients vs Additional Nutrients
+  const carbsItem = meal.nutritionList?.find((n) => n.name === '탄수화물');
+  const proteinItem = meal.nutritionList?.find((n) => n.name === '단백질');
+  // 지방: ONLY present if actual NEIS OpenAPI response provides it!
+  const fatItem = meal.nutritionList?.find((n) => n.name === '지방');
 
-    if (willBeDone && isPrimarySeedHabit) {
-      try {
-        confetti({
-          particleCount: 35,
-          spread: 50,
-          origin: { y: 0.8 },
-          colors: ['#22C55E', '#38BDF8', '#FACC15'],
-        });
-      } catch {
-        // ignore
-      }
-    }
-  };
+  const coreNutrients: { name: string; amount: string; icon?: string }[] = [];
 
-  const handleToggleMovement = (id: string) => {
-    setSelectedMovementIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
+  // 1. 열량 (Calorie)
+  if (meal.calories) {
+    coreNutrients.push({ name: '열량', amount: meal.calories });
+  }
+
+  // 2. 탄수화물
+  if (carbsItem) {
+    coreNutrients.push(carbsItem);
+  }
+
+  // 3. 단백질
+  if (proteinItem) {
+    coreNutrients.push(proteinItem);
+  }
+
+  // 4. 지방 (NEIS 실제값 제공 시에만 추가)
+  if (fatItem) {
+    coreNutrients.push(fatItem);
+  }
+
+  // 나머지 영양소 (비타민A, 티아민, 리보플라빈, 비타민C, 칼슘, 철분 등)
+  const moreNutrients = (meal.nutritionList || []).filter(
+    (n) => !['열량', '탄수화물', '단백질', '지방'].includes(n.name)
+  );
+
+  // Selected movement object
+  const activeMovement =
+    MOVEMENT_OPTIONS.find((m) => m.id === selectedMovementId) || MOVEMENT_OPTIONS[0];
+
+  // Calculated effective minutes
+  const effectiveMinutes =
+    durationPreset === 'custom'
+      ? Math.max(1, parseInt(customMinutes, 10) || 10)
+      : durationPreset;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -104,6 +178,7 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
 
     setIsCompressing(true);
     setErrorMessage(null);
+    setShowPhotoChoiceModal(false);
 
     try {
       const base64 = await compressAndConvertToBase64(file);
@@ -126,8 +201,8 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
     setIsPhotoSaved(true);
     try {
       confetti({
-        particleCount: 45,
-        spread: 60,
+        particleCount: 40,
+        spread: 55,
         origin: { y: 0.65 },
         colors: ['#22C55E', '#38BDF8', '#FACC15'],
       });
@@ -147,20 +222,25 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
   const handleSelectPresetMemo = (preset: string) => {
     if (memo.includes(preset)) return;
     setMemo((prev) => (prev ? `${prev} ${preset}` : preset));
+    setIsPhotoSaved(false);
   };
 
+  // Activity Habit Sync (+1 Seed, preventing duplicate seed)
   const handleCompleteMovement = () => {
-    if (!dailyRecord.activity) {
-      onToggleHabit('activity', true);
-      try {
-        confetti({
-          particleCount: 40,
-          spread: 55,
-          origin: { y: 0.75 },
-          colors: ['#22C55E', '#38BDF8', '#FACC15'],
-        });
-      } catch {}
+    if (dailyRecord.activity) {
+      // 이미 오늘 몸 움직이기로 Seed를 받았으면 중복 지급하지 않음
+      return;
     }
+
+    onToggleHabit('activity', true);
+    try {
+      confetti({
+        particleCount: 45,
+        spread: 60,
+        origin: { y: 0.8 },
+        colors: ['#22C55E', '#38BDF8', '#FACC15'],
+      });
+    } catch {}
   };
 
   return (
@@ -216,7 +296,9 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
         </p>
       </div>
 
-      {/* Weekend or Holiday No-Meal Banner */}
+      {/* ================================================== */}
+      {/* 1. 오늘의 급식 영역 (Dish Cards) */}
+      {/* ================================================== */}
       {isNoMeal ? (
         <div className="detail-no-meal-banner animate-pop-in">
           <div className="detail-no-meal-header">
@@ -238,66 +320,125 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
           </div>
         </div>
       ) : (
-        <>
-          {/* Menu Cards 2-Column Grid */}
-          <div className="detail-menu-grid animate-pop-in">
-            {meal.menu.map((dish, index) => (
-              <div key={index} className="detail-dish-card">
-                <span className="dish-icon">{getMenuIcon(dish)}</span>
-                <div className="dish-info">
-                  <span className="dish-index">메뉴 {index + 1}</span>
-                  <strong className="dish-name">{dish}</strong>
-                </div>
+        <div className="detail-menu-grid animate-pop-in">
+          {meal.menu.map((dish, index) => (
+            <div key={index} className="detail-dish-card">
+              <span className="dish-icon">{getMenuIcon(dish)}</span>
+              <div className="dish-info">
+                <span className="dish-index">메뉴 {index + 1}</span>
+                <strong className="dish-name">{dish}</strong>
               </div>
-            ))}
-          </div>
-
-          {/* Real NEIS Nutritional & Allergy Info Area */}
-          <div className="meal-extra-info-section animate-fade-in-up">
-            {/* Nutrition Info Card */}
-            <div className="info-box-item nutrition-box">
-              <div className="info-box-header">
-                <Apple size={16} className="info-box-icon apple-icon" />
-                <span className="info-box-title">성장 영양 정보</span>
-              </div>
-              {meal.nutritionList && meal.nutritionList.length > 0 ? (
-                <div className="nutrition-chips-wrap">
-                  {meal.nutritionList.map((n, idx) => (
-                    <div key={idx} className="nutrition-chip">
-                      <span className="ntr-name">{n.name}</span>
-                      <strong className="ntr-amount">{n.amount}</strong>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="info-box-status">{meal.nutritionInfo || '영양소 고루 포함'}</p>
-              )}
             </div>
-
-            {/* Allergy Info Card */}
-            <div className="info-box-item allergy-box">
-              <div className="info-box-header">
-                <AlertCircle size={16} className="info-box-icon alert-icon" />
-                <span className="info-box-title">알레르기 유발 물질 안내</span>
-              </div>
-              {meal.allergyList && meal.allergyList.length > 0 ? (
-                <div className="allergy-chips-wrap">
-                  {meal.allergyList.map((allergy, idx) => (
-                    <span key={idx} className="allergy-tag">
-                      {allergy}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="info-box-status">{meal.allergyInfo || '특이 유발물질 없음'}</p>
-              )}
-            </div>
-          </div>
-        </>
+          ))}
+        </div>
       )}
 
       {/* ================================================== */}
-      {/* 12. 오늘의 한 끼 기록 📸 (Meal Photo Section) */}
+      {/* 2. 영양 · 알레르기 정보 영역 (단순화 및 아코디언) */}
+      {/* ================================================== */}
+      {!isNoMeal && (
+        <section className="meal-simplified-nutrition-section animate-fade-in-up">
+          {/* Header */}
+          <div className="section-title-row">
+            <div className="section-title-wrap">
+              <Apple size={16} className="nutrition-section-icon" />
+              <h3 className="section-title">영양 · 알레르기 정보</h3>
+            </div>
+            <span className="info-live-source">NEIS 공식 정보</span>
+          </div>
+
+          {/* 2-1. 핵심 영양정보 4개 기본 표시 (열량, 탄수화물, 단백질, 지방) */}
+          <div className="core-nutrition-grid">
+            {coreNutrients.length > 0 ? (
+              coreNutrients.map((item, idx) => (
+                <div key={idx} className={`core-nutrient-card ${item.name === '열량' ? 'calorie-card' : ''}`}>
+                  <div className="nutrient-label-row">
+                    {item.name === '열량' && <Flame size={13} className="calorie-icon" />}
+                    <span className="nutrient-label">{item.name}</span>
+                  </div>
+                  <strong className="nutrient-val">{item.amount}</strong>
+                </div>
+              ))
+            ) : (
+              <p className="nutrition-empty-note">
+                {meal.nutritionInfo || '영양 정보가 제공되지 않았습니다.'}
+              </p>
+            )}
+          </div>
+
+          {/* 2-2. [영양정보 더보기 ▼] 아코디언 */}
+          {moreNutrients.length > 0 && (
+            <div className="nutrition-more-container">
+              <button
+                type="button"
+                className="btn-nutrition-toggle"
+                onClick={() => setShowMoreNutrition(!showMoreNutrition)}
+                aria-expanded={showMoreNutrition}
+              >
+                <span>{showMoreNutrition ? '영양정보 접기' : '영양정보 더보기'}</span>
+                {showMoreNutrition ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              </button>
+
+              {showMoreNutrition && (
+                <div className="expanded-nutrition-chips animate-fade-in-up">
+                  {moreNutrients.map((n, idx) => (
+                    <div key={idx} className="sub-nutrition-chip">
+                      <span className="sub-ntr-name">{n.name}</span>
+                      <strong className="sub-ntr-amount">{n.amount}</strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 2-3. 알레르기 정보 한 줄 카드 및 접기/펼치기 */}
+          <div className="allergy-accordion-wrapper">
+            <button
+              type="button"
+              className={`allergy-single-line-card ${showAllergies ? 'expanded' : ''}`}
+              onClick={() => setShowAllergies(!showAllergies)}
+              aria-expanded={showAllergies}
+            >
+              <div className="allergy-card-left">
+                <span className="allergy-alert-emoji">⚠️</span>
+                <span className="allergy-card-title">
+                  {meal.allergyList && meal.allergyList.length > 0
+                    ? `알레르기 정보 ${meal.allergyList.length}종 확인하기`
+                    : '알레르기 정보 확인 (특이 유발물질 없음)'}
+                </span>
+              </div>
+              <div className="allergy-card-right">
+                <span className="allergy-arrow-text">
+                  {showAllergies ? '접기' : ''}
+                </span>
+                {showAllergies ? <ChevronUp size={16} /> : <ChevronRight size={16} />}
+              </div>
+            </button>
+
+            {showAllergies && (
+              <div className="allergy-detail-expanded animate-fade-in-up">
+                {meal.allergyList && meal.allergyList.length > 0 ? (
+                  <div className="allergy-tags-wrap">
+                    {meal.allergyList.map((allergy, idx) => (
+                      <span key={idx} className="allergy-tag">
+                        {allergy}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="allergy-safe-text">
+                    오늘 급식에는 특이 알레르기 유발 물질이 포함되어 있지 않습니다.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ================================================== */}
+      {/* 3. 오늘의 한 끼 기록 📸 (콤팩트 카드 및 사진/메모) */}
       {/* ================================================== */}
       <section className="meal-photo-record-section animate-fade-in-up">
         <div className="section-title-row">
@@ -310,9 +451,6 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
             <span>나만의 비공개 기록</span>
           </span>
         </div>
-        <p className="habits-section-desc">
-          식사량이나 칼로리 평가 대신, 오늘 내가 마주한 건강하고 즐거운 한 끼를 담아보세요.
-        </p>
 
         {/* Error message */}
         {errorMessage && (
@@ -322,7 +460,7 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
           </div>
         )}
 
-        {/* Photo Container or Upload Buttons */}
+        {/* 3-1. 사진이 이미 첨부되었거나 선택된 경우 */}
         {photoDataUrl ? (
           <div className="meal-photo-preview-card animate-pop-in">
             <div className="photo-img-wrapper">
@@ -335,14 +473,14 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
               )}
             </div>
 
-            {/* Memo input section */}
+            {/* 한 줄 메모 입력 영역 */}
             <div className="meal-memo-box">
               <label className="memo-label">
                 <Smile size={14} />
-                <span>나의 긍정 식사 메모 (선택사항)</span>
+                <span>한 줄 메모 (선택사항)</span>
               </label>
 
-              {/* Memo Presets */}
+              {/* 긍정 메모 칩 */}
               <div className="memo-presets-row">
                 {MEMO_PRESETS.map((preset, idx) => (
                   <button
@@ -358,7 +496,7 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
 
               <textarea
                 className="meal-memo-input"
-                placeholder="“새로운 반찬도 먹어봤어요.” “천천히 즐겁게 먹었어요.”"
+                placeholder="“오늘은 새로운 반찬도 먹어봤어요.” “천천히 먹으려고 노력했어요.”"
                 rows={2}
                 value={memo}
                 onChange={(e) => {
@@ -374,17 +512,17 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
                   onClick={handleSaveMealPhoto}
                 >
                   <Check size={16} />
-                  <span>{isPhotoSaved ? '수정 내용 저장' : '급식판 기록 저장하기'}</span>
+                  <span>{isPhotoSaved ? '수정 저장' : '저장'}</span>
                 </button>
 
                 <button
                   type="button"
                   className="btn-retake-photo"
-                  onClick={() => cameraInputRef.current?.click()}
+                  onClick={() => setShowPhotoChoiceModal(true)}
                   title="사진 다시 찍기"
                 >
                   <RotateCcw size={14} />
-                  <span>다시 촬영</span>
+                  <span>다시 선택</span>
                 </button>
 
                 <button
@@ -399,217 +537,191 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
             </div>
           </div>
         ) : (
-          <div className="photo-upload-container">
-            <div className="photo-upload-placeholder">
-              <div className="upload-icon-circle">
-                <Camera size={28} />
+          /* 3-2. 기본 화면: 간결한 콤팩트 카드 (“오늘의 급식판을 기록해볼까요?” + [사진 남기기]) */
+          <div className="compact-photo-invite-card animate-pop-in">
+            <div className="invite-content-row">
+              <div className="invite-icon-wrap">
+                <Camera size={22} className="invite-cam-icon" />
               </div>
-              <strong className="upload-placeholder-title">오늘의 급식판을 사진으로 남겨보세요</strong>
-              <p className="upload-placeholder-desc">
-                사진은 친구들이나 피드에 공개되지 않고, 오직 나의 건강 기록장에만 안전하게 보관됩니다.
-              </p>
-
-              <div className="photo-btn-group">
-                <button
-                  type="button"
-                  className="btn-camera-trigger"
-                  onClick={() => cameraInputRef.current?.click()}
-                  disabled={isCompressing}
-                >
-                  <Camera size={16} />
-                  <span>급식판 사진 찍기</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="btn-album-trigger"
-                  onClick={() => albumInputRef.current?.click()}
-                  disabled={isCompressing}
-                >
-                  <ImageIcon size={16} />
-                  <span>앨범에서 선택</span>
-                </button>
+              <div className="invite-texts">
+                <strong className="invite-main-text">오늘의 급식판을 기록해볼까요?</strong>
+                <span className="invite-sub-text">
+                  식사량이나 칼로리 평가 대신, 나만의 건강한 한 끼를 담아보세요.
+                </span>
               </div>
-
-              {isCompressing && (
-                <div className="photo-compressing-text animate-pulse">
-                  <span>사진을 건강 기록용으로 최적화하는 중...</span>
-                </div>
-              )}
             </div>
+
+            <button
+              type="button"
+              className="btn-compact-photo-action"
+              onClick={() => setShowPhotoChoiceModal(true)}
+              disabled={isCompressing}
+            >
+              <Camera size={15} />
+              <span>사진 남기기</span>
+            </button>
+
+            {isCompressing && (
+              <div className="photo-compressing-text animate-pulse">
+                <span>사진을 최적화하는 중...</span>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Safety & Anti-Evaluation Banner */}
-        <div className="photo-philosophy-banner">
+        {/* 비공개 알림 안내 */}
+        <div className="photo-private-notice">
           <ShieldCheck size={14} color="#16A34A" />
           <span>
-            HealSeed는 식사량·칼로리·외모를 평가하지 않으며, 나만의 기분 좋은 식사 경험을 응원합니다.
+            급식판 사진은 개인 기록이며 함께하기 화면이나 친구들에게 공개되지 않습니다.
           </span>
         </div>
       </section>
 
       {/* ================================================== */}
-      {/* Today's Meal Habits Checklist Section */}
-      {/* ================================================== */}
-      <div className="meal-habits-section animate-fade-in-up">
-        <div className="section-title-row">
-          <div className="section-title-wrap">
-            <Sparkles size={16} className="section-sparkle" />
-            <h3 className="section-title">오늘의 한 끼 습관</h3>
-          </div>
-          <span className="section-hint">즐거운 식사 실천</span>
-        </div>
-        <p className="habits-section-desc">
-          먹은 양이나 칼로리 대신, 건강한 식사 태도와 기분 좋은 실천에 귀 기울여보세요.
-        </p>
-
-        <div className="meal-habit-card-list">
-          {/* 1. 골고루 먹어보았어요 (balancedMeal -> +1 Seed 양방향 동기화) */}
-          <div
-            id="habit-balanced-meal"
-            className={`meal-habit-card ${dailyRecord.balancedMeal ? 'checked' : ''}`}
-            onClick={() => handleHabitClick('balancedMeal', true)}
-          >
-            <div className="habit-card-left">
-              <div className="habit-badge-icon meal-icon">
-                <UtensilsCrossed size={18} />
-              </div>
-              <div className="habit-text-wrap">
-                <div className="habit-name-row">
-                  <strong className="habit-name">골고루 먹어보았어요</strong>
-                  <span className="seed-reward-badge">+1 Seed</span>
-                </div>
-                <span className="habit-subtext">채소와 단백질 등 다양한 반찬을 골고루 맛보았어요</span>
-              </div>
-            </div>
-            <div className={`habit-check-circle ${dailyRecord.balancedMeal ? 'active' : ''}`}>
-              <CheckCircle2 size={24} />
-            </div>
-          </div>
-
-          {/* 2. 천천히 식사했어요 (slowEating) */}
-          <div
-            id="habit-slow-eating"
-            className={`meal-habit-card ${dailyRecord.slowEating ? 'checked' : ''}`}
-            onClick={() => handleHabitClick('slowEating', false)}
-          >
-            <div className="habit-card-left">
-              <div className="habit-badge-icon time-icon">
-                <Clock size={18} />
-              </div>
-              <div className="habit-text-wrap">
-                <strong className="habit-name">천천히 식사했어요</strong>
-                <span className="habit-subtext">급하게 먹지 않고 여유 있게 씹으며 식사를 음미했어요</span>
-              </div>
-            </div>
-            <div className={`habit-check-circle ${dailyRecord.slowEating ? 'active' : ''}`}>
-              <CheckCircle2 size={24} />
-            </div>
-          </div>
-
-          {/* 3. 물을 함께 마셨어요 (water -> +1 Seed 양방향 동기화) */}
-          <div
-            id="habit-water-drink"
-            className={`meal-habit-card ${dailyRecord.water ? 'checked' : ''}`}
-            onClick={() => handleHabitClick('water', true)}
-          >
-            <div className="habit-card-left">
-              <div className="habit-badge-icon water-icon">
-                <Droplets size={18} />
-              </div>
-              <div className="habit-text-wrap">
-                <div className="habit-name-row">
-                  <strong className="habit-name">물을 함께 마셨어요</strong>
-                  <span className="seed-reward-badge">+1 Seed</span>
-                </div>
-                <span className="habit-subtext">식사 전후로 물을 마시며 수분을 상쾌하게 보충했어요</span>
-              </div>
-            </div>
-            <div className={`habit-check-circle ${dailyRecord.water ? 'active' : ''}`}>
-              <CheckCircle2 size={24} />
-            </div>
-          </div>
-
-          {/* 4. 내 몸의 배고픔과 포만감에 귀 기울였어요 (listenToBody) */}
-          <div
-            id="habit-listen-body"
-            className={`meal-habit-card ${dailyRecord.listenToBody ? 'checked' : ''}`}
-            onClick={() => handleHabitClick('listenToBody', false)}
-          >
-            <div className="habit-card-left">
-              <div className="habit-badge-icon mind-icon">
-                <Heart size={18} />
-              </div>
-              <div className="habit-text-wrap">
-                <strong className="habit-name">내 몸의 배고픔과 포만감에 귀 기울였어요</strong>
-                <span className="habit-subtext">배부름의 신호를 알아차리고 내 몸에 맞게 편안하게 먹었어요</span>
-              </div>
-            </div>
-            <div className={`habit-check-circle ${dailyRecord.listenToBody ? 'active' : ''}`}>
-              <CheckCircle2 size={24} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ================================================== */}
-      {/* 14 & 15. 오늘의 움직임 추천 🏃 (Movement Section) */}
+      {/* 4. 오늘의 10분 움직임 🏃 (단순화, 추천 1개, 시간 기록) */}
       {/* ================================================== */}
       <section className="movement-recommend-section animate-fade-in-up">
+        {/* Section Header */}
         <div className="section-title-row">
           <div className="section-title-wrap">
             <span className="movement-section-emoji">🏃</span>
-            <h3 className="section-title">오늘도 기분 좋게 움직여볼까요?</h3>
+            <div className="movement-title-column">
+              <h3 className="section-title">오늘의 10분 움직임</h3>
+              <span className="movement-subtitle">쉬는 시간, 가볍게 몸을 움직여볼까요?</span>
+            </div>
           </div>
           <span className={`movement-sync-pill ${dailyRecord.activity ? 'done' : ''}`}>
-            {dailyRecord.activity ? '실천 완료됨 ✓' : '+1 Seed 연결'}
+            {dailyRecord.activity ? '실천 완료 ✓' : '+1 Seed'}
           </span>
         </div>
-        <p className="habits-section-desc">
-          식사 후 실천하고 싶은 움직임을 자유롭게 골라보세요. (여러 개 중복 선택 가능 🌱)
-        </p>
 
-        {/* Gentle Movement Suggestion Cards (Multi-Select) */}
-        <div className="movement-cards-list">
-          {RECOMMENDED_MOVEMENTS.map((mov) => {
-            const isSelected = selectedMovementIds.includes(mov.id);
-            return (
-              <div
-                key={mov.id}
-                className={`movement-card ${isSelected ? 'selected' : ''}`}
-                onClick={() => handleToggleMovement(mov.id)}
-                role="checkbox"
-                aria-checked={isSelected}
-                tabIndex={0}
-              >
-                <div className="movement-card-left">
-                  <span className="movement-card-icon">{mov.icon}</span>
-                  <div className="movement-card-texts">
-                    <strong className="movement-card-title">{mov.title}</strong>
-                    <span className="movement-card-desc">{mov.desc}</span>
-                  </div>
-                </div>
-                <div className={`movement-checkbox ${isSelected ? 'active' : ''}`}>
-                  {isSelected && <Check size={14} strokeWidth={3} />}
-                </div>
-              </div>
-            );
-          })}
+        {/* 4-1. 기본 화면: 추천 움직임 1개만 표시 */}
+        <div className="featured-movement-card animate-pop-in">
+          <div className="featured-header-row">
+            <span className="featured-badge">🚶 오늘의 추천</span>
+            <span className="featured-intensity-tag">{effectiveMinutes}분 · {activeMovement.intensity}</span>
+          </div>
+          <div className="featured-main-body">
+            <span className="featured-icon">{activeMovement.icon}</span>
+            <div className="featured-texts">
+              <strong className="featured-name">{activeMovement.desc}</strong>
+              <span className="featured-desc">{activeMovement.name}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Action Button: Dual-screen Activity Sync */}
-        <div className="movement-action-box">
+        {/* 4-2. [다른 움직임 보기 ▼] 아코디언 토글 */}
+        <div className="other-movements-toggle-wrap">
+          <button
+            type="button"
+            className="btn-toggle-other-movements"
+            onClick={() => setShowOtherMovements(!showOtherMovements)}
+            aria-expanded={showOtherMovements}
+          >
+            <span>{showOtherMovements ? '다른 움직임 접기' : '다른 움직임 보기'}</span>
+            {showOtherMovements ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          </button>
+
+          {showOtherMovements && (
+            <div className="other-movements-list animate-fade-in-up">
+              {MOVEMENT_OPTIONS.map((mov) => {
+                const isSelected = mov.id === selectedMovementId;
+                return (
+                  <div
+                    key={mov.id}
+                    className={`movement-choice-card ${isSelected ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedMovementId(mov.id);
+                      if (durationPreset !== 'custom') {
+                        setDurationPreset(mov.defaultMinutes);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="movement-choice-left">
+                      <span className="choice-icon">{mov.icon}</span>
+                      <div className="choice-texts">
+                        <strong className="choice-title">{mov.name}</strong>
+                        <span className="choice-desc">{mov.desc}</span>
+                      </div>
+                    </div>
+                    <div className={`choice-radio ${isSelected ? 'selected' : ''}`}>
+                      {isSelected && <Check size={13} strokeWidth={3} />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 4-3. 실제 움직인 시간 기록 */}
+        <div className="movement-duration-box">
+          <label className="duration-question-label">
+            <span>오늘 얼마나 움직였나요?</span>
+          </label>
+
+          <div className="duration-chips-row">
+            {DURATION_PRESETS.map((minutes) => (
+              <button
+                key={minutes}
+                type="button"
+                className={`duration-chip ${durationPreset === minutes ? 'active' : ''}`}
+                onClick={() => {
+                  setDurationPreset(minutes);
+                  setCustomMinutes(String(minutes));
+                }}
+              >
+                {minutes}분
+              </button>
+            ))}
+
+            <button
+              type="button"
+              className={`duration-chip ${durationPreset === 'custom' ? 'active' : ''}`}
+              onClick={() => setDurationPreset('custom')}
+            >
+              직접 입력
+            </button>
+          </div>
+
+          {/* 직접 입력 시 분 단위 숫자 입력창 */}
+          {durationPreset === 'custom' && (
+            <div className="custom-duration-input-row animate-pop-in">
+              <input
+                type="number"
+                min={1}
+                max={180}
+                className="custom-duration-input"
+                placeholder="예: 20"
+                value={customMinutes}
+                onChange={(e) => setCustomMinutes(e.target.value)}
+              />
+              <span className="input-unit">분 동안 움직였어요</span>
+            </div>
+          )}
+
+          {/* 선택 요약 배너 */}
+          <div className="movement-selection-summary">
+            <span className="summary-title">오늘의 움직임</span>
+            <div className="summary-content">
+              <span className="summary-icon">{activeMovement.icon}</span>
+              <strong className="summary-name">{activeMovement.name}</strong>
+              <span className="summary-time">· {effectiveMinutes}분</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 4-4. 실천 완료 버튼 (+1 Seed 양방향 연동 & 중복 방지) */}
+        <div className="movement-action-container">
           {dailyRecord.activity ? (
-            <div className="movement-already-done-card animate-pop-in">
-              <CheckCircle2 size={22} className="done-icon" />
-              <div className="done-text-wrap">
-                <strong>
-                  {selectedMovementIds.length > 0
-                    ? `오늘 ${selectedMovementIds.length}가지 움직임을 실천 중이에요! 👏`
-                    : '오늘의 몸 움직이기 습관을 이미 완료했어요!'}
-                </strong>
-                <span>홈 화면의 "몸 움직이기" 습관(+1 Seed)과 함께 연동되었습니다.</span>
+            <div className="movement-done-badge-card animate-pop-in">
+              <CheckCircle2 size={22} className="done-check-icon" />
+              <div className="done-banner-texts">
+                <strong>오늘의 움직임 실천 완료! 👏</strong>
+                <span>오늘 이미 몸 움직이기 습관(+1 Seed)을 받았습니다.</span>
               </div>
             </div>
           ) : (
@@ -617,35 +729,78 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
               type="button"
               className="btn-complete-movement animate-pop-in"
               onClick={handleCompleteMovement}
-              disabled={selectedMovementIds.length === 0}
             >
               <Activity size={18} />
-              <span>
-                {selectedMovementIds.length > 0
-                  ? `선택한 ${selectedMovementIds.length}가지 움직임 오늘 실천하기 (+1 Seed)`
-                  : '실천할 움직임을 1개 이상 선택해주세요 (+1 Seed)'}
-              </span>
+              <span>실천 완료 +1 Seed</span>
             </button>
           )}
         </div>
 
-        {/* Section 15 Non-Compensatory / Health Advice Notice */}
-        <div className="movement-advice-banner">
-          <p className="advice-main-quote">
-            “식후 10분 산책은 가볍게 몸을 움직이는 좋은 습관이에요.” 🍃
-          </p>
-          <span className="advice-sub-text">
-            HealSeed는 칼로리를 운동으로 소모하거나 상쇄하지 않고, 활기찬 일상을 위한 기분 좋은 움직임을 제안합니다.
+        {/* 7. 건강한 일상 습관 철학 배너 (칼로리 상쇄 금지 메시지) */}
+        <div className="movement-philosophy-banner">
+          <strong className="philosophy-quote">
+            “잘 먹고, 즐겁게 움직이고, 건강한 습관을 키워요 🌱”
+          </strong>
+          <span className="philosophy-detail">
+            HealSeed는 칼로리를 운동으로 없애거나 상쇄하지 않고, 활기찬 일상을 위한 기분 좋은 움직임을 권장합니다.
           </span>
         </div>
       </section>
 
-      {/* Bottom Complete / Back Button */}
+      {/* Bottom Back Button */}
       <div className="bottom-action-area">
         <button className="btn-primary" onClick={onBack} id="btn-meal-detail-back">
           <span>확인 완료</span>
         </button>
       </div>
+
+      {/* Photo Choice Modal (카메라 / 앨범) */}
+      {showPhotoChoiceModal && (
+        <div className="photo-choice-overlay animate-fade-in" onClick={() => setShowPhotoChoiceModal(false)}>
+          <div className="photo-choice-sheet animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="choice-sheet-header">
+              <strong className="choice-sheet-title">급식판 사진 남기기</strong>
+              <button
+                type="button"
+                className="btn-close-sheet"
+                onClick={() => setShowPhotoChoiceModal(false)}
+                aria-label="닫기"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p className="choice-sheet-desc">
+              오늘 맛있게 먹은 식판 사진을 나만의 건강 기록장에 담아보세요.
+            </p>
+
+            <div className="choice-sheet-buttons">
+              <button
+                type="button"
+                className="btn-sheet-action camera-btn"
+                onClick={() => {
+                  setShowPhotoChoiceModal(false);
+                  cameraInputRef.current?.click();
+                }}
+              >
+                <Camera size={18} />
+                <span>📷 급식판 사진 찍기</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn-sheet-action album-btn"
+                onClick={() => {
+                  setShowPhotoChoiceModal(false);
+                  albumInputRef.current?.click();
+                }}
+              >
+                <ImageIcon size={18} />
+                <span>🖼️ 앨범에서 선택</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

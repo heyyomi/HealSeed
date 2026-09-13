@@ -45,6 +45,7 @@ export interface MealData {
   date: string; // YYYY-MM-DD
   schoolName: string;
   menu: string[];
+  calories?: string | null;
   nutritionInfo: string | null;
   allergyInfo: string | null;
   allergyList?: string[];

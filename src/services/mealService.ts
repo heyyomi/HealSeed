@@ -159,6 +159,7 @@ function parseDishes(dishRaw: string): { menu: string[]; allergyList: string[] }
 
 /**
  * Parse NEIS nutrition info string into structured NutritionItem array
+ * Supports 탄수화물, 단백질, 지방, 칼슘, 비타민C, 철분, 비타민A, 티아민, 리보플라빈
  */
 function parseNutrition(ntrRaw: string): NutritionItem[] {
   if (!ntrRaw) return [];
@@ -169,13 +170,22 @@ function parseNutrition(ntrRaw: string): NutritionItem[] {
     .map((line) => {
       const [namePart, amountPart] = line.split(':').map((s) => s.trim());
       let name = namePart || '';
-      name = name.replace(/\(g\)|\(mg\)|\(R\.E\)/g, '').trim();
+      let unit = '';
+      const unitMatch = name.match(/\((g|mg|R\.E)\)/i);
+      if (unitMatch) {
+        unit = unitMatch[1];
+      }
+      name = name.replace(/\(g\)|\(mg\)|\(R\.E\)/gi, '').trim();
+      let amount = amountPart || '';
+      if (amount && unit && !amount.toLowerCase().includes(unit.toLowerCase())) {
+        amount = `${amount} ${unit}`.trim();
+      }
       return {
         name: name || '영양소',
-        amount: amountPart || '',
+        amount: amount,
       };
     })
-    .filter((n) => ['단백질', '칼슘', '비타민C', '철분', '비타민A', '티아민', '리보플라빈', '탄수화물'].includes(n.name));
+    .filter((n) => ['열량', '탄수화물', '단백질', '지방', '칼슘', '비타민C', '철분', '비타민A', '티아민', '리보플라빈'].includes(n.name));
 }
 
 /**
@@ -212,6 +222,7 @@ export async function getMealBySchoolAndDate(
       date: targetDateStr,
       schoolName: officialName,
       menu: [],
+      calories: null,
       nutritionInfo: null,
       allergyInfo: null,
       allergyList: [],
@@ -243,10 +254,13 @@ export async function getMealBySchoolAndDate(
         ? nutritionList.slice(0, 3).map((n) => `${n.name} ${n.amount}`).join(' · ')
         : '필수 영양소 고루 포함';
 
+      const calorieText = row.CAL_INFO ? row.CAL_INFO.trim() : null;
+
       return {
         date: targetDateStr,
         schoolName: officialName || schoolName,
         menu,
+        calories: calorieText,
         nutritionInfo: nutritionInfoText,
         allergyInfo: allergyInfoText,
         allergyList,
@@ -262,6 +276,7 @@ export async function getMealBySchoolAndDate(
       date: targetDateStr,
       schoolName: officialName || schoolName,
       menu: [],
+      calories: null,
       nutritionInfo: null,
       allergyInfo: null,
       allergyList: [],
@@ -279,6 +294,7 @@ export async function getMealBySchoolAndDate(
     date: targetDateStr,
     schoolName: schoolName || '숭곡중학교',
     menu: [],
+    calories: null,
     nutritionInfo: null,
     allergyInfo: null,
     allergyList: [],
