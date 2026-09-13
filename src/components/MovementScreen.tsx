@@ -43,7 +43,34 @@ export const MovementScreen: React.FC<MovementScreenProps> = ({ date, dailyRecor
       <section className="lifestyle-card lifestyle-feature-card">
         <div className="lifestyle-section-head"><div className="lifestyle-card-title"><span className="lifestyle-icon-box"><Activity size={18} /></span><h3>오늘의 추천 움직임</h3></div><span className="lifestyle-status-pill">추천</span></div>
         <div className="movement-choice-list">
-          {activities.map((item) => <button key={item.id} className={selectedId === item.id ? 'selected' : ''} onClick={() => { setSelectedId(item.id); setDuration(item.durationMinutes); }}><span>{item.icon}</span><div><strong>{item.name}</strong><small>{item.location} · {item.durationText || `${item.durationMinutes}분`}</small></div></button>)}
+          {activities.map((item) => (
+            <button
+              key={item.id}
+              className={selectedId === item.id ? 'selected' : ''}
+              onClick={() => {
+                setSelectedId(item.id);
+                setDuration(item.durationMinutes);
+              }}
+            >
+              <span className="movement-choice-icon">{item.icon}</span>
+              <div className="movement-choice-info">
+                <strong className="movement-choice-title">
+                  {item.id === 'stretch-wake' || item.name === '온몸 깨우기 스트레칭' ? (
+                    <>
+                      <span className="choice-title-line">온몸 깨우기</span>
+                      <span className="choice-title-line">스트레칭</span>
+                    </>
+                  ) : (
+                    <span className="choice-title-line">{item.name}</span>
+                  )}
+                </strong>
+                <small className="movement-choice-meta">
+                  <span className="meta-loc">{item.location}</span>
+                  <span className="meta-dur-pill">· {item.durationText || `${item.durationMinutes}분`}</span>
+                </small>
+              </div>
+            </button>
+          ))}
         </div>
       </section>
 
