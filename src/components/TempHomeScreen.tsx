@@ -577,7 +577,11 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
       };
     });
     setToastMessage({
-      title: todayRecord.mindCare ? '마음돌봄 기록 업데이트 💜' : '+1 Seed 🌱',
+      title: todayRecord.mindCareRecord?.completed
+        ? '마음돌봄 기록 업데이트 💜'
+        : todayRecord.mindCare
+          ? '마음돌봄 완료 💜'
+          : '+1 Seed 🌱',
       subtitle: `${record.chapterName} ${record.durationMinutes}분을 기록했어요.`,
     });
     setTimeout(() => setToastMessage(null), 2500);
@@ -773,15 +777,19 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
               <div><span>오늘의 건강생활</span><h3>{getFormattedDateLabel(getFormattedDate())}</h3></div>
               <strong>+{completedTodayCount} Seed</strong>
             </div>
-            <div className="home-condition-row">
-              <span>컨디션</span>
-              <div>{CONDITION_OPTIONS.map((option) => <button key={option.level} type="button" className={todayRecord.condition?.level === option.level ? 'selected' : ''} onClick={() => handleSelectCondition(option)} aria-label={option.label}>{option.emoji}</button>)}</div>
+            <div className="home-condition-panel">
+              <div className="home-condition-heading">
+                <div><span>오늘의 컨디션</span><strong>지금 몸과 마음은 어때요?</strong></div>
+                <b>{todayRecord.condition ? `${todayRecord.condition.emoji} ${todayRecord.condition.label}` : '아직 미기록'}</b>
+              </div>
+              <p>가장 가까운 상태를 가볍게 선택해 보세요. Seed에는 영향을 주지 않아요.</p>
+              <div className="home-condition-options">{CONDITION_OPTIONS.map((option) => <button key={option.level} type="button" className={todayRecord.condition?.level === option.level ? 'selected' : ''} onClick={() => handleSelectCondition(option)} aria-label={option.label} aria-pressed={todayRecord.condition?.level === option.level}><span>{option.emoji}</span><small>{option.label}</small></button>)}</div>
             </div>
             <div className="home-summary-grid">
               <button type="button" onClick={() => setActiveTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '실천 완료' : '기록하기'}</b></button>
               <button type="button" className={todayRecord.water ? 'done' : ''} onClick={() => handleToggleHabit('water', true)}><Droplets /><span>물 마시기</span><b>{todayRecord.water ? '완료' : '+1 Seed'}</b></button>
               <button type="button" onClick={() => setActiveTab('movement')}><Activity /><span>오늘의 운동</span><b>{todayRecord.movementRecord ? `${todayRecord.movementRecord.durationMinutes}분` : '시작하기'}</b></button>
-              <button type="button" className={todayRecord.mindCare ? 'done' : ''} onClick={() => setActiveTab('mind')}><Heart /><span>마음 돌보기</span><b>{todayRecord.mindCare ? '완료' : '시작하기'}</b></button>
+              <button type="button" className={todayRecord.mindCareRecord?.completed ? 'done' : ''} onClick={() => setActiveTab('mind')}><Heart /><span>마음 돌보기</span><b>{todayRecord.mindCareRecord?.completed ? '실천 완료' : '시작하기'}</b></button>
             </div>
           </section>
 

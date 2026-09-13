@@ -63,7 +63,7 @@ export const MindCareScreen: React.FC<MindCareScreenProps> = ({ date, dailyRecor
         <div className="mind-guide-heading"><span>{selected.icon}</span><div><h3>{selected.name}</h3><p>{selected.summary}</p></div></div>
         <ol>{selected.steps.map((step) => <li key={step}>{step}</li>)}</ol>
         <div className="mind-timer"><span>{timerText}</span><div><button onClick={() => { if (secondsLeft === 0) setSecondsLeft(selected.minutes * 60); setIsRunning((value) => !value); }}>{isRunning ? <Pause size={18} /> : <Play size={18} />}{isRunning ? '잠시 멈춤' : secondsLeft === 0 ? '다시 시작' : '시작'}</button><button onClick={resetTimer} aria-label="타이머 초기화"><RotateCcw size={17} /></button></div></div>
-        <button className="primary-action" onClick={() => onComplete({ date, chapterId: selected.id, chapterName: selected.name, durationMinutes: selected.minutes })}>{dailyRecord.mindCare ? '마음돌봄 기록 업데이트' : '오늘 마음을 돌봤어요 +1 Seed'}</button>
+        <button className="primary-action" onClick={() => onComplete({ date, chapterId: selected.id, chapterName: selected.name, durationMinutes: selected.minutes })}>{dailyRecord.mindCareRecord?.completed ? '마음돌봄 기록 업데이트' : dailyRecord.mindCare ? '오늘 마음을 돌봤어요' : '오늘 마음을 돌봤어요 +1 Seed'}</button>
         <p className="mind-safety-note">불편함이 느껴지면 언제든 멈추고, 믿을 수 있는 어른이나 전문가에게 도움을 요청하세요.</p>
       </section>
 
