@@ -87,25 +87,16 @@ export const GrowthPreviewScreen: React.FC<GrowthPreviewScreenProps> = ({
                 (e.currentTarget as HTMLImageElement).src = character.image;
               }}
             />
-
-            {/* Subtle Companion Badge Floating */}
-            <div className="floating-item-badge animate-pop-in" title={story.unlockedItem}>
-              {story.itemBadge}
-            </div>
           </div>
         </div>
 
         {/* Dynamic Story Description for This Level */}
         <div className="growth-story-box animate-fade-in-up">
           <div className="story-header-row">
-            <span className="growth-step-tag">성장 단계</span>
+            <span className="growth-step-tag">성장 스토리</span>
             <strong className="story-title">{story.storyTitle}</strong>
           </div>
           <p className="story-description">{story.storyDescription}</p>
-          <div className="story-item-note">
-            <span>보조 선물:</span>
-            <strong>{story.unlockedItem} ({story.itemBadge})</strong>
-          </div>
         </div>
       </div>
 

@@ -574,4 +574,88 @@
   flex-shrink: 0;
 }
 
+/* Condition & Meta Summary Row (Section 5) */
+.record-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0 2px;
+}
+
+.record-condition-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.record-condition-pill.empty {
+  color: #94A3B8;
+  font-size: 11px;
+  font-weight: 600;
+  border-style: dashed;
+}
+
+.record-condition-pill .cond-emoji {
+  font-size: 13px;
+}
+
+.record-habits-count-pill {
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+.record-habits-count-pill strong {
+  color: var(--primary-700);
+  font-weight: 800;
+}
+
+/* Modal Condition Card */
+.archive-condition-card {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FEFCE8 100%);
+  border-color: #FEF08A;
+}
+
+.archive-condition-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #FEF08A;
+  border-radius: var(--radius-md);
+}
+
+.archive-cond-emoji {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.archive-cond-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.archive-cond-label {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #854D0E;
+}
+
+.archive-cond-sub {
+  font-size: 11.5px;
+  color: #713F12;
+  opacity: 0.8;
+}
+
+
 

@@ -1343,4 +1343,640 @@
   filter: brightness(1.05);
 }
 
+/* ================================================== */
+/* 📋 오늘의 기록 흐름 스타일 (Section 3) */
+/* ================================================== */
+.daily-record-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.daily-record-main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.daily-record-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.daily-title-icon {
+  color: var(--primary-600);
+}
+
+.daily-record-main-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.daily-record-date-tag {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748B;
+  background-color: #F1F5F9;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+/* Common Daily Flow Card */
+.daily-flow-card {
+  background-color: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: var(--radius-xl);
+  padding: 14px 16px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.flow-card-sub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flow-card-sub-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* 1. 오늘의 컨디션은 어때요? (Section 1 & 2) */
+.condition-flow-card {
+  border-color: #A7F3D0;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);
+}
+
+.condition-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.condition-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.condition-question-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #166534;
+}
+
+.condition-question-sub {
+  font-size: 12px;
+  color: #4B5563;
+  font-weight: 500;
+}
+
+.condition-badge-exempt {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #059669;
+  background-color: #D1FAE5;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+}
+
+.condition-options-list {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.condition-select-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  background-color: #FFFFFF;
+  border: 1.5px solid #E5E7EB;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+}
+
+.condition-select-btn:hover {
+  border-color: #86EFAC;
+  transform: translateY(-1px);
+}
+
+.condition-select-btn.selected {
+  border-color: #22C55E;
+  background-color: #DCFCE7;
+  box-shadow: 0 3px 8px rgba(34, 197, 94, 0.18);
+}
+
+.condition-btn-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.condition-btn-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #374151;
+  text-align: center;
+  word-break: keep-all;
+  line-height: 1.2;
+}
+
+.condition-select-btn.selected .condition-btn-label {
+  color: #166534;
+  font-weight: 800;
+}
+
+.condition-active-badge {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #FFFFFF;
+  background-color: #16A34A;
+  padding: 1px 4px;
+  border-radius: 4px;
+  position: absolute;
+  bottom: -4px;
+}
+
+.condition-feedback-msg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  font-size: 11.5px;
+  color: #065F46;
+}
+
+.condition-feedback-msg strong {
+  color: #047857;
+}
+
+/* 3. 오늘의 움직임 카드 */
+.movement-flow-card {
+  border-color: #E2E8F0;
+}
+
+.section-activity-icon {
+  color: #16A34A;
+}
+
+.movement-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.movement-status-badge.completed {
+  background-color: #DCFCE7;
+  color: #15803D;
+}
+
+.movement-status-badge.pending {
+  background-color: #EFF6FF;
+  color: #2563EB;
+}
+
+.movement-completed-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
+}
+
+.movement-completed-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.movement-done-icon {
+  font-size: 20px;
+}
+
+.movement-done-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.movement-done-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #166534;
+}
+
+.movement-done-time {
+  font-size: 11px;
+  color: #4B5563;
+}
+
+.btn-re-movement {
+  background: none;
+  border: none;
+  color: #16A34A;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.movement-recommend-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.movement-recommend-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recommend-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.recommend-desc {
+  font-size: 11px;
+  color: #64748B;
+}
+
+.btn-start-movement {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.btn-start-movement:hover {
+  filter: brightness(1.05);
+}
+
+/* 4. 오늘의 한 끼 기록 */
+.section-camera-icon {
+  color: #F59E0B;
+}
+
+.meal-record-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.meal-record-badge.completed {
+  background-color: #FEF3C7;
+  color: #B45309;
+}
+
+.meal-record-badge.pending {
+  background-color: #F1F5F9;
+  color: #64748B;
+}
+
+.meal-record-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.meal-record-preview-box:hover {
+  background-color: #FEF3C7;
+}
+
+.meal-record-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid #F59E0B;
+}
+
+.meal-record-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.meal-record-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #92400E;
+}
+
+.meal-record-memo {
+  font-size: 11.5px;
+  color: #78350F;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.meal-record-edit-link {
+  font-size: 11px;
+  font-weight: 700;
+  color: #B45309;
+}
+
+.meal-record-empty-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #F8FAFC;
+  border: 1px dashed #CBD5E1;
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.meal-record-empty-text {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.btn-start-meal-record {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.2);
+}
+
+.btn-start-meal-record:hover {
+  filter: brightness(1.05);
+}
+
+/* 5. 오늘 심은 Seed */
+.seed-summary-flow-card {
+  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+  border-color: #86EFAC;
+}
+
+.seed-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.seed-summary-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.seed-summary-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.seed-summary-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #166534;
+}
+
+.seed-summary-score {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  background-color: #FFFFFF;
+  border: 1px solid #86EFAC;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.seed-summary-score strong {
+  font-size: 15px;
+  color: #15803D;
+  font-weight: 800;
+}
+
+.seed-summary-score span {
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 700;
+}
+
+.seed-summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seed-summary-desc {
+  font-size: 12px;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.seed-progress-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seed-dot-step {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #FFFFFF;
+  border: 1.5px solid #86EFAC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #15803D;
+  font-weight: 800;
+}
+
+.seed-dot-step.empty {
+  border-color: #CBD5E1;
+  color: #94A3B8;
+  background-color: #F8FAFC;
+}
+
+/* ================================================== */
+/* 🌟 캐릭터 레벨업 축하 연출 모달 (Section 11) */
+/* ================================================== */
+.celebration-backdrop {
+  z-index: 1000;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.levelup-celebration-card {
+  width: 100%;
+  max-width: 360px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);
+  border: 2px solid #86EFAC;
+  border-radius: var(--radius-2xl);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 16px 36px rgba(34, 197, 94, 0.25);
+  gap: 12px;
+}
+
+.celebration-badge-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #FEF3C7;
+  color: #B45309;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+}
+
+.celebration-main-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #15803D;
+  letter-spacing: -0.5px;
+}
+
+.celebration-sub-title {
+  font-size: 13.5px;
+  color: #374151;
+  line-height: 1.4;
+}
+
+.celebration-highlight-level {
+  color: #16A34A;
+  font-weight: 800;
+}
+
+.celebration-avatar-stage {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 0;
+}
+
+.celebration-glow-circle {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px solid;
+  opacity: 0.35;
+  box-shadow: 0 0 24px rgba(34, 197, 94, 0.4);
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.celebration-char-img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border-radius: 50%;
+  position: relative;
+  z-index: 1;
+}
+
+.celebration-story-box {
+  background-color: #FFFFFF;
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius-lg);
+  padding: 10px 14px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.celebration-story-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #166534;
+}
+
+.celebration-story-desc {
+  font-size: 11.5px;
+  color: #4B5563;
+  line-height: 1.4;
+}
+
+.celebration-action-row {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.btn-view-growth {
+  width: 100%;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14.5px;
+  font-weight: 800;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+}
+
+
 

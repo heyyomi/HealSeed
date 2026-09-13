@@ -141,9 +141,10 @@ export function calculateLevelInfo(seed: number): LevelInfo {
 
 /**
  * Return specific growth stage image path for given character and level.
+ * Path format: /assets/characters/${characterId}/level${level}.png
  */
 export function getCharacterGrowthImage(characterId: CharacterId, level: LevelNumber): string {
-  return `/assets/characters/${characterId}/level${level}.jpg`;
+  return `/assets/characters/${characterId}/level${level}.png`;
 }
 
 /**

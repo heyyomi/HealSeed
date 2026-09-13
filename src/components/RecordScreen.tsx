@@ -11,7 +11,8 @@ import {
   Heart,
   Droplets,
   Activity,
-  Award
+  Award,
+  Smile
 } from 'lucide-react';
 import type { DailyRecord, MealData, MealRecord } from '../types/onboarding';
 import { isWeekend } from '../services/mealService';
@@ -53,7 +54,7 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
     const m = parseInt(parts[1], 10);
     const d = parseInt(parts[2], 10);
     const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][new Date(dateStr).getDay()];
-    return `${m}월 ${d}일 (${dayOfWeek})`;
+    return `${m}월 ${d}일 ${dayOfWeek}요일`;
   };
 
   // Selected date modal details
@@ -125,8 +126,25 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
                 </div>
                 <div className="record-seed-pill">
                   <Sparkles size={13} className="seed-sparkle-icon" />
-                  <strong>{earnedSeed} Seed</strong>
+                  <strong>+{earnedSeed} Seed</strong>
                 </div>
+              </div>
+
+              {/* Day Quick Summary: Condition & Habit Count (Section 5) */}
+              <div className="record-meta-row">
+                {rec.condition ? (
+                  <span className="record-condition-pill" title="그날의 컨디션 기록">
+                    <span className="cond-emoji">{rec.condition.emoji}</span>
+                    <span className="cond-text">{rec.condition.label}</span>
+                  </span>
+                ) : (
+                  <span className="record-condition-pill empty">
+                    <span className="cond-text">컨디션 미기록</span>
+                  </span>
+                )}
+                <span className="record-habits-count-pill">
+                  건강습관 <strong>{earnedSeed}/4</strong>
+                </span>
               </div>
 
               {/* Photo Thumbnail Banner (Section 13) */}
@@ -237,6 +255,23 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
                 <CloseIcon size={20} />
               </button>
             </div>
+
+            {/* Condition check on that date (Section 5) */}
+            {selectedDailyRecord?.condition && (
+              <div className="archive-section-card archive-condition-card">
+                <div className="archive-section-header">
+                  <Smile size={15} />
+                  <strong>그날의 컨디션</strong>
+                </div>
+                <div className="archive-condition-body">
+                  <span className="archive-cond-emoji">{selectedDailyRecord.condition.emoji}</span>
+                  <div className="archive-cond-texts">
+                    <strong className="archive-cond-label">{selectedDailyRecord.condition.label}</strong>
+                    <span className="archive-cond-sub">나의 몸과 마음 상태를 돌아본 소중한 기록이에요.</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Meal Photo (if exists) */}
             {selectedMealRecord?.mealImageUrl && (

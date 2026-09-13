@@ -79,6 +79,13 @@ export interface MovementRecord {
   completedAt: string;
 }
 
+export interface UserCondition {
+  level: 1 | 2 | 3 | 4 | 5;
+  label: string;
+  emoji: string;
+  updatedAt: string;
+}
+
 export interface DailyRecord {
   date: string;
   // 4 Primary Seed Habits (Each +1 Seed, Max 4 Seed/day)
@@ -91,6 +98,8 @@ export interface DailyRecord {
   listenToBody: boolean; // 내 몸의 배고픔과 포만감에 귀 기울였어요
   // Movement Record
   movementRecord?: MovementRecord;
+  // Today's Condition
+  condition?: UserCondition;
 }
 
 export interface UserProfile {

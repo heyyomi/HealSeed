@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Home,
   CalendarDays,
@@ -16,12 +16,15 @@ import {
   PartyPopper,
   Target,
   Award,
-  X
+  X,
+  Camera,
+  ArrowRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import type { OnboardingState, DailyRecord, MealData, SchoolType, PrimaryHabitKey, WeeklyGoal } from '../types/onboarding';
+import type { OnboardingState, DailyRecord, MealData, SchoolType, PrimaryHabitKey, WeeklyGoal, UserCondition, CharacterId } from '../types/onboarding';
 import { CHARACTERS } from '../data/characters';
 import { CHARACTER_GROWTH_STORIES } from '../data/growthStages';
+import { CONDITION_OPTIONS, type ConditionOption } from '../data/conditionLevels';
 import { calculateLevelInfo, getCharacterGrowthImage, getFormattedDate } from '../utils/seedRules';
 import { getMealBySchoolAndDate } from '../services/mealService';
 import { TodayMealCard } from './TodayMealCard';
@@ -50,6 +53,15 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
   const [toastMessage, setToastMessage] = useState<{ title: string; subtitle: string } | null>(null);
   const [showTestPanel, setShowTestPanel] = useState(false);
   const [showGrowthSheet, setShowGrowthSheet] = useState(false);
+  const [levelUpCelebration, setLevelUpCelebration] = useState<{
+    prevLevel: number;
+    newLevel: number;
+    characterName: string;
+    characterId: CharacterId;
+    levelName: string;
+    storyTitle: string;
+    storyDescription: string;
+  } | null>(null);
 
   // Fetch meal data for current date & school
   useEffect(() => {
@@ -103,6 +115,76 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     (todayRecord.mindCare ? 1 : 0);
 
   const isAllCompletedToday = completedTodayCount === 4;
+
+  // Watch for Level-Up moment to trigger gentle celebratory modal (Section 11)
+  const prevLevelRef = useRef<number>(levelInfo.level);
+  useEffect(() => {
+    if (levelInfo.level > prevLevelRef.current) {
+      const nextLvl = levelInfo.level;
+      const targetStory = CHARACTER_GROWTH_STORIES[character.id]?.[nextLvl];
+      setLevelUpCelebration({
+        prevLevel: prevLevelRef.current,
+        newLevel: nextLvl,
+        characterName: character.name,
+        characterId: character.id,
+        levelName: levelInfo.levelName,
+        storyTitle: targetStory?.storyTitle || '',
+        storyDescription: targetStory?.storyDescription || '',
+      });
+
+      try {
+        confetti({
+          particleCount: 65,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#22C55E', '#FACC15', '#38BDF8', '#EC4899', '#A855F7'],
+        });
+      } catch {
+        // ignore
+      }
+    }
+    prevLevelRef.current = levelInfo.level;
+  }, [levelInfo.level, character.id, character.name, levelInfo.levelName]);
+
+  // Handle Condition Selection (Section 1 & 2 & 4: Strictly +0 Seed, per date storage)
+  const handleSelectCondition = (opt: ConditionOption) => {
+    onUpdateState((prev) => {
+      const prevRec = prev.dailyRecords[currentDateString] || {
+        date: currentDateString,
+        balancedMeal: false,
+        water: false,
+        activity: false,
+        mindCare: false,
+        slowEating: false,
+        listenToBody: false,
+      };
+
+      const nextCondition: UserCondition = {
+        level: opt.level,
+        label: opt.label,
+        emoji: opt.emoji,
+        updatedAt: new Date().toISOString(),
+      };
+
+      return {
+        ...prev,
+        // Strictly no seed alteration (+0 Seed)
+        dailyRecords: {
+          ...prev.dailyRecords,
+          [currentDateString]: {
+            ...prevRec,
+            condition: nextCondition,
+          },
+        },
+      };
+    });
+
+    setToastMessage({
+      title: `${opt.emoji} ${opt.label}`,
+      subtitle: '오늘의 몸과 마음 상태를 기록했어요.',
+    });
+    setTimeout(() => setToastMessage(null), 2500);
+  };
 
   // Toggle habit with strict anti-duplication & dual-screen state sharing
   const handleToggleHabit = (habitKey: keyof DailyRecord, isPrimarySeedHabit: boolean) => {
@@ -615,163 +697,347 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
             />
           )}
 
-          {/* 2. 4 HEALTH HABITS CHECKLIST */}
-          <section className="habit-preview-section animate-fade-in-up">
-            <div className="section-header-row">
-              <div className="section-title-wrap">
-                <Sparkles size={16} className="section-sparkle" />
-                <h3 className="section-title">오늘의 건강습관</h3>
+          {/* ================================================== */}
+          {/* 📋 오늘의 기록 흐름 (Section 3) */}
+          {/* 오늘의 기록 -> 오늘의 컨디션 -> 오늘의 건강습관 -> 오늘의 움직임 -> 오늘의 한 끼 기록 -> 오늘 심은 Seed */}
+          {/* ================================================== */}
+          <section className="daily-record-container animate-fade-in-up">
+            <div className="daily-record-main-header">
+              <div className="daily-record-title-wrap">
+                <CalendarDays size={18} className="daily-title-icon" />
+                <h3 className="daily-record-main-title">오늘의 기록</h3>
               </div>
-              <span className="section-hint">
-                완료 {completedTodayCount}/4 (최대 4 Seed)
-              </span>
+              <span className="daily-record-date-tag">{getFormattedDateLabel(currentDateString)}</span>
             </div>
 
-            {/* 4 Completed Celebration Alert */}
-            {isAllCompletedToday && (
-              <div className="all-completed-banner animate-pop-in">
-                <PartyPopper size={20} className="party-icon" />
-                <div className="all-completed-text">
-                  <strong>오늘의 건강습관을 모두 실천했어요!</strong>
-                  <span>오늘 총 4개의 Seed를 심었어요 🌱</span>
+            {/* 1. “오늘의 컨디션은 어때요?” (Section 1 & 2) */}
+            <div className="daily-flow-card condition-flow-card animate-fade-in-up">
+              <div className="condition-card-header">
+                <div className="condition-titles">
+                  <h4 className="condition-question-title">오늘의 컨디션은 어때요?</h4>
+                  <p className="condition-question-sub">지금 내 몸과 마음의 상태를 골라보세요.</p>
                 </div>
-              </div>
-            )}
-
-            <div className="habit-card-list">
-              {/* 1. 급식 골고루 먹기 (balancedMeal) */}
-              <div
-                id="habit-card-meal"
-                className={`habit-action-card ${todayRecord.balancedMeal ? 'done' : ''}`}
-                onClick={() => handleToggleHabit('balancedMeal', true)}
-              >
-                <div
-                  className="habit-icon-circle"
-                  style={{
-                    backgroundColor: todayRecord.balancedMeal ? '#DCFCE7' : '#FFF0E9',
-                    color: todayRecord.balancedMeal ? '#16A34A' : '#FB923C',
-                  }}
-                >
-                  <Utensils size={18} />
-                </div>
-                <div className="habit-info">
-                  <div className="habit-category-row">
-                    <span className="habit-category">식사 습관</span>
-                    {targetHabitKey === 'balancedMeal' && (
-                      <span className="my-goal-mini-badge">🌱 나의 목표</span>
-                    )}
-                  </div>
-                  <span className="habit-title">급식 골고루 먹기</span>
-                </div>
-                <div className="habit-check-action">
-                  <div className={`habit-check-btn ${todayRecord.balancedMeal ? 'checked' : ''}`}>
-                    <CheckCircle2 size={24} />
-                  </div>
-                  <span className={`habit-point-pill ${todayRecord.balancedMeal ? 'done-pill' : ''}`}>
-                    +1 Seed
-                  </span>
-                </div>
+                <span className="condition-badge-exempt">기록용 · +0 Seed</span>
               </div>
 
-              {/* 2. 물 충분히 마시기 (water) */}
-              <div
-                id="habit-card-water"
-                className={`habit-action-card ${todayRecord.water ? 'done' : ''}`}
-                onClick={() => handleToggleHabit('water', true)}
-              >
-                <div
-                  className="habit-icon-circle"
-                  style={{
-                    backgroundColor: todayRecord.water ? '#DCFCE7' : '#E0F2FE',
-                    color: todayRecord.water ? '#16A34A' : '#38BDF8',
-                  }}
-                >
-                  <Droplets size={18} />
-                </div>
-                <div className="habit-info">
-                  <div className="habit-category-row">
-                    <span className="habit-category">수분 섭취</span>
-                    {targetHabitKey === 'water' && (
-                      <span className="my-goal-mini-badge">🌱 나의 목표</span>
-                    )}
-                  </div>
-                  <span className="habit-title">물 충분히 마시기</span>
-                </div>
-                <div className="habit-check-action">
-                  <div className={`habit-check-btn ${todayRecord.water ? 'checked' : ''}`}>
-                    <CheckCircle2 size={24} />
-                  </div>
-                  <span className={`habit-point-pill ${todayRecord.water ? 'done-pill' : ''}`}>
-                    +1 Seed
-                  </span>
-                </div>
+              {/* 5-Level Condition Selector */}
+              <div className="condition-options-list">
+                {CONDITION_OPTIONS.map((opt) => {
+                  const isSelected = todayRecord.condition?.level === opt.level;
+                  return (
+                    <button
+                      key={opt.level}
+                      type="button"
+                      id={`btn-condition-${opt.level}`}
+                      className={`condition-select-btn ${isSelected ? 'selected' : ''}`}
+                      onClick={() => handleSelectCondition(opt)}
+                      aria-pressed={isSelected}
+                      title={opt.description}
+                    >
+                      <span className="condition-btn-emoji">{opt.emoji}</span>
+                      <span className="condition-btn-label">{opt.label}</span>
+                      {isSelected && <span className="condition-active-badge">선택됨</span>}
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* 3. 몸 움직이기 (activity) */}
-              <div
-                id="habit-card-movement"
-                className={`habit-action-card ${todayRecord.activity ? 'done' : ''}`}
-                onClick={() => handleToggleHabit('activity', true)}
-              >
-                <div
-                  className="habit-icon-circle"
-                  style={{
-                    backgroundColor: todayRecord.activity ? '#DCFCE7' : '#F0FDF4',
-                    color: todayRecord.activity ? '#16A34A' : '#4ADE80',
-                  }}
-                >
-                  <Activity size={18} />
-                </div>
-                <div className="habit-info">
-                  <div className="habit-category-row">
-                    <span className="habit-category">신체활동</span>
-                    {targetHabitKey === 'activity' && (
-                      <span className="my-goal-mini-badge">🌱 나의 목표</span>
-                    )}
-                  </div>
-                  <span className="habit-title">몸 움직이기</span>
-                </div>
-                <div className="habit-check-action">
-                  <div className={`habit-check-btn ${todayRecord.activity ? 'checked' : ''}`}>
-                    <CheckCircle2 size={24} />
-                  </div>
-                  <span className={`habit-point-pill ${todayRecord.activity ? 'done-pill' : ''}`}>
-                    +1 Seed
+              {todayRecord.condition && (
+                <div className="condition-feedback-msg animate-fade-in">
+                  <span className="feedback-icon">{todayRecord.condition.emoji}</span>
+                  <span className="feedback-text">
+                    오늘 나의 컨디션은 <strong>"{todayRecord.condition.label}"</strong> 상태예요.
                   </span>
                 </div>
+              )}
+            </div>
+
+            {/* 2. 오늘의 건강습관 */}
+            <div className="daily-flow-card habits-flow-card animate-fade-in-up">
+              <div className="flow-card-sub-header">
+                <div className="section-title-wrap">
+                  <Sparkles size={16} className="section-sparkle" />
+                  <h4 className="flow-card-sub-title">오늘의 건강습관</h4>
+                </div>
+                <span className="section-hint">
+                  완료 {completedTodayCount}/4 (최대 4 Seed)
+                </span>
               </div>
 
-              {/* 4. 마음 돌보기 (mindCare) */}
-              <div
-                id="habit-card-mind"
-                className={`habit-action-card ${todayRecord.mindCare ? 'done' : ''}`}
-                onClick={() => handleToggleHabit('mindCare', true)}
-              >
+              {/* 4 Completed Celebration Alert */}
+              {isAllCompletedToday && (
+                <div className="all-completed-banner animate-pop-in">
+                  <PartyPopper size={20} className="party-icon" />
+                  <div className="all-completed-text">
+                    <strong>오늘의 건강습관을 모두 실천했어요!</strong>
+                    <span>오늘 총 4개의 Seed를 심었어요 🌱</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="habit-card-list">
+                {/* 1. 급식 골고루 먹기 (balancedMeal) */}
                 <div
-                  className="habit-icon-circle"
-                  style={{
-                    backgroundColor: todayRecord.mindCare ? '#DCFCE7' : '#F3E8FF',
-                    color: todayRecord.mindCare ? '#16A34A' : '#C084FC',
-                  }}
+                  id="habit-card-meal"
+                  className={`habit-action-card ${todayRecord.balancedMeal ? 'done' : ''}`}
+                  onClick={() => handleToggleHabit('balancedMeal', true)}
                 >
-                  <Heart size={18} />
-                </div>
-                <div className="habit-info">
-                  <div className="habit-category-row">
-                    <span className="habit-category">마음돌봄</span>
-                    {targetHabitKey === 'mindCare' && (
-                      <span className="my-goal-mini-badge">🌱 나의 목표</span>
-                    )}
+                  <div
+                    className="habit-icon-circle"
+                    style={{
+                      backgroundColor: todayRecord.balancedMeal ? '#DCFCE7' : '#FFF0E9',
+                      color: todayRecord.balancedMeal ? '#16A34A' : '#FB923C',
+                    }}
+                  >
+                    <Utensils size={18} />
                   </div>
-                  <span className="habit-title">마음 돌보기</span>
-                </div>
-                <div className="habit-check-action">
-                  <div className={`habit-check-btn ${todayRecord.mindCare ? 'checked' : ''}`}>
-                    <CheckCircle2 size={24} />
+                  <div className="habit-info">
+                    <div className="habit-category-row">
+                      <span className="habit-category">식사 습관</span>
+                      {targetHabitKey === 'balancedMeal' && (
+                        <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                      )}
+                    </div>
+                    <span className="habit-title">급식 골고루 먹기</span>
                   </div>
-                  <span className={`habit-point-pill ${todayRecord.mindCare ? 'done-pill' : ''}`}>
-                    +1 Seed
-                  </span>
+                  <div className="habit-check-action">
+                    <div className={`habit-check-btn ${todayRecord.balancedMeal ? 'checked' : ''}`}>
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <span className={`habit-point-pill ${todayRecord.balancedMeal ? 'done-pill' : ''}`}>
+                      +1 Seed
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. 물 충분히 마시기 (water) */}
+                <div
+                  id="habit-card-water"
+                  className={`habit-action-card ${todayRecord.water ? 'done' : ''}`}
+                  onClick={() => handleToggleHabit('water', true)}
+                >
+                  <div
+                    className="habit-icon-circle"
+                    style={{
+                      backgroundColor: todayRecord.water ? '#DCFCE7' : '#E0F2FE',
+                      color: todayRecord.water ? '#16A34A' : '#38BDF8',
+                    }}
+                  >
+                    <Droplets size={18} />
+                  </div>
+                  <div className="habit-info">
+                    <div className="habit-category-row">
+                      <span className="habit-category">수분 섭취</span>
+                      {targetHabitKey === 'water' && (
+                        <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                      )}
+                    </div>
+                    <span className="habit-title">물 충분히 마시기</span>
+                  </div>
+                  <div className="habit-check-action">
+                    <div className={`habit-check-btn ${todayRecord.water ? 'checked' : ''}`}>
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <span className={`habit-point-pill ${todayRecord.water ? 'done-pill' : ''}`}>
+                      +1 Seed
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. 몸 움직이기 (activity) */}
+                <div
+                  id="habit-card-movement"
+                  className={`habit-action-card ${todayRecord.activity ? 'done' : ''}`}
+                  onClick={() => handleToggleHabit('activity', true)}
+                >
+                  <div
+                    className="habit-icon-circle"
+                    style={{
+                      backgroundColor: todayRecord.activity ? '#DCFCE7' : '#F0FDF4',
+                      color: todayRecord.activity ? '#16A34A' : '#4ADE80',
+                    }}
+                  >
+                    <Activity size={18} />
+                  </div>
+                  <div className="habit-info">
+                    <div className="habit-category-row">
+                      <span className="habit-category">신체활동</span>
+                      {targetHabitKey === 'activity' && (
+                        <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                      )}
+                    </div>
+                    <span className="habit-title">몸 움직이기</span>
+                  </div>
+                  <div className="habit-check-action">
+                    <div className={`habit-check-btn ${todayRecord.activity ? 'checked' : ''}`}>
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <span className={`habit-point-pill ${todayRecord.activity ? 'done-pill' : ''}`}>
+                      +1 Seed
+                    </span>
+                  </div>
+                </div>
+
+                {/* 4. 마음 돌보기 (mindCare) */}
+                <div
+                  id="habit-card-mind"
+                  className={`habit-action-card ${todayRecord.mindCare ? 'done' : ''}`}
+                  onClick={() => handleToggleHabit('mindCare', true)}
+                >
+                  <div
+                    className="habit-icon-circle"
+                    style={{
+                      backgroundColor: todayRecord.mindCare ? '#DCFCE7' : '#F3E8FF',
+                      color: todayRecord.mindCare ? '#16A34A' : '#C084FC',
+                    }}
+                  >
+                    <Heart size={18} />
+                  </div>
+                  <div className="habit-info">
+                    <div className="habit-category-row">
+                      <span className="habit-category">마음돌봄</span>
+                      {targetHabitKey === 'mindCare' && (
+                        <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                      )}
+                    </div>
+                    <span className="habit-title">마음 돌보기</span>
+                  </div>
+                  <div className="habit-check-action">
+                    <div className={`habit-check-btn ${todayRecord.mindCare ? 'checked' : ''}`}>
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <span className={`habit-point-pill ${todayRecord.mindCare ? 'done-pill' : ''}`}>
+                      +1 Seed
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. 오늘의 움직임 */}
+            <div className="daily-flow-card movement-flow-card animate-fade-in-up">
+              <div className="flow-card-sub-header">
+                <div className="section-title-wrap">
+                  <Activity size={16} className="section-activity-icon" />
+                  <h4 className="flow-card-sub-title">오늘의 움직임</h4>
+                </div>
+                {todayRecord.movementRecord?.completed ? (
+                  <span className="movement-status-badge completed">✓ 실천 완료</span>
+                ) : (
+                  <span className="movement-status-badge pending">추천 활동</span>
+                )}
+              </div>
+
+              {todayRecord.movementRecord?.completed ? (
+                <div className="movement-completed-box">
+                  <div className="movement-completed-left">
+                    <span className="movement-done-icon">🏃</span>
+                    <div className="movement-done-info">
+                      <strong className="movement-done-title">{todayRecord.movementRecord.activityName}</strong>
+                      <span className="movement-done-time">실제 움직인 시간: {todayRecord.movementRecord.durationMinutes}분</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-re-movement"
+                    onClick={() => setIsDetailOpen(true)}
+                  >
+                    영상 다시보기 &gt;
+                  </button>
+                </div>
+              ) : (
+                <div className="movement-recommend-box">
+                  <div className="movement-recommend-texts">
+                    <strong className="recommend-title">식후 10분 가벼운 스트레칭 & 산책</strong>
+                    <span className="recommend-desc">몸을 편안하게 펴고 맑은 활력을 채워보세요.</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-start-movement"
+                    onClick={() => setIsDetailOpen(true)}
+                  >
+                    <span>움직임 실천하기 &gt;</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 4. 오늘의 한 끼 기록 */}
+            <div className="daily-flow-card meal-record-flow-card animate-fade-in-up">
+              <div className="flow-card-sub-header">
+                <div className="section-title-wrap">
+                  <Camera size={16} className="section-camera-icon" />
+                  <h4 className="flow-card-sub-title">오늘의 한 끼 기록</h4>
+                </div>
+                {data.mealRecords[currentDateString]?.mealImageUrl ? (
+                  <span className="meal-record-badge completed">기록 완료</span>
+                ) : (
+                  <span className="meal-record-badge pending">미기록</span>
+                )}
+              </div>
+
+              {data.mealRecords[currentDateString]?.mealImageUrl ? (
+                <div className="meal-record-preview-box" onClick={() => setIsDetailOpen(true)}>
+                  <img
+                    src={data.mealRecords[currentDateString].mealImageUrl}
+                    alt="오늘의 급식판"
+                    className="meal-record-thumb"
+                  />
+                  <div className="meal-record-info">
+                    <strong className="meal-record-title">나의 소중한 한 끼</strong>
+                    <p className="meal-record-memo">
+                      "{data.mealRecords[currentDateString].mealMemo || '건강하게 잘 먹었습니다!'}"
+                    </p>
+                    <span className="meal-record-edit-link">기록 확인 / 수정 &gt;</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="meal-record-empty-box">
+                  <p className="meal-record-empty-text">
+                    오늘 먹은 급식판 사진과 간단한 소감을 남겨보세요.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-start-meal-record"
+                    onClick={() => setIsDetailOpen(true)}
+                  >
+                    <Camera size={15} />
+                    <span>급식판 사진 찍기 / 앨범에서 선택</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 5. 오늘 심은 Seed */}
+            <div className="daily-flow-card seed-summary-flow-card animate-fade-in-up">
+              <div className="seed-summary-header">
+                <div className="seed-summary-title-row">
+                  <img src="/assets/seed_icon.jpg" alt="Seed" className="seed-summary-icon" />
+                  <h4 className="seed-summary-title">오늘 심은 Seed</h4>
+                </div>
+                <div className="seed-summary-score">
+                  <strong>+{completedTodayCount}</strong>
+                  <span>/ 4 Seed</span>
+                </div>
+              </div>
+              <div className="seed-summary-content">
+                <p className="seed-summary-desc">
+                  {completedTodayCount === 4
+                    ? '🎉 오늘 심을 수 있는 모든 건강 Seed를 심었어요! 메이트가 쑥쑥 자라나요.'
+                    : completedTodayCount > 0
+                    ? `오늘 ${completedTodayCount}개의 건강습관을 실천했어요. 매일의 작은 실천이 큰 성장을 만들어요!`
+                    : '오늘의 건강습관을 실천하고 건강 Seed를 모아보세요.'}
+                </p>
+                <div className="seed-progress-dots">
+                  {[1, 2, 3, 4].map((num) => (
+                    <div
+                      key={num}
+                      className={`seed-dot-step ${num <= completedTodayCount ? 'filled' : 'empty'}`}
+                      title={`${num}번째 Seed`}
+                    >
+                      {num <= completedTodayCount ? '🌱' : '○'}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -999,6 +1265,63 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                 onClick={() => setShowGrowthSheet(false)}
               >
                 <span>닫기</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================== */}
+      {/* 🌟 캐릭터 레벨업 축하 연출 모달 (Section 11) */}
+      {/* ================================================== */}
+      {levelUpCelebration && (
+        <div className="modal-backdrop celebration-backdrop" onClick={() => setLevelUpCelebration(null)}>
+          <div className="levelup-celebration-card animate-pop-in" onClick={(e) => e.stopPropagation()}>
+            <div className="celebration-badge-top">
+              <Sparkles size={14} />
+              <span>성장 축하</span>
+            </div>
+
+            <h3 className="celebration-main-title">🌱 건강습관이 자라났어요!</h3>
+            <p className="celebration-sub-title">
+              <strong>{levelUpCelebration.characterName}</strong>이가{' '}
+              <span className="celebration-highlight-level">
+                Lv.{levelUpCelebration.newLevel} {levelUpCelebration.levelName}
+              </span>
+              (으)로 성장했어요!
+            </p>
+
+            {/* Growing Character Stage Visual */}
+            <div className="celebration-avatar-stage">
+              <div className="celebration-glow-circle" style={{ borderColor: character.themeColor }} />
+              <img
+                src={getCharacterGrowthImage(levelUpCelebration.characterId, levelUpCelebration.newLevel as any)}
+                alt={`${levelUpCelebration.characterName} Lv.${levelUpCelebration.newLevel}`}
+                className="celebration-char-img animate-pop-in"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = character.image;
+                }}
+              />
+            </div>
+
+            {/* Growth Story Snippet */}
+            <div className="celebration-story-box">
+              <strong className="celebration-story-title">{levelUpCelebration.storyTitle}</strong>
+              <p className="celebration-story-desc">{levelUpCelebration.storyDescription}</p>
+            </div>
+
+            {/* Action Button */}
+            <div className="celebration-action-row">
+              <button
+                type="button"
+                className="btn-primary btn-view-growth"
+                onClick={() => {
+                  setLevelUpCelebration(null);
+                  setShowGrowthSheet(true);
+                }}
+              >
+                <span>성장한 모습 보기</span>
+                <ArrowRight size={18} />
               </button>
             </div>
           </div>
