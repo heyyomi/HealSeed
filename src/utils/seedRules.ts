@@ -140,11 +140,43 @@ export function calculateLevelInfo(seed: number): LevelInfo {
 }
 
 /**
- * Return specific growth stage image path for given character and level.
- * Path format: /assets/characters/${characterId}/level${level}.png
+ * Official cute 3D character representative images
  */
-export function getCharacterGrowthImage(characterId: CharacterId, level: LevelNumber): string {
-  return `/assets/characters/${characterId}/level${level}.png`;
+export const CHARACTER_BASE_IMAGES: Record<CharacterId, string> = {
+  chick: '/assets/chick.jpg',
+  sprout: '/assets/sprout.jpg',
+  rabbit: '/assets/rabbit.jpg',
+  bear: '/assets/bear.jpg',
+  cat: '/assets/cat.jpg',
+};
+
+/**
+ * Return the original cute 3D representative image for a character
+ */
+export function getCharacterBaseImage(characterId: CharacterId): string {
+  return CHARACTER_BASE_IMAGES[characterId] || '/assets/chick.jpg';
+}
+
+/**
+ * Return candidate growth image path for future custom level images.
+ * Target folder structure:
+ * /assets/characters/${characterId}/level${level}.png (or .jpg)
+ */
+export function getCharacterGrowthImagePath(
+  characterId: CharacterId,
+  level: LevelNumber,
+  extension: 'png' | 'jpg' = 'png'
+): string {
+  return `/assets/characters/${characterId}/level${level}.${extension}`;
+}
+
+/**
+ * Return character growth image with immediate fallback:
+ * Falls back to the existing cute 3D character representative image
+ * until dedicated level-specific files are provided by the user.
+ */
+export function getCharacterGrowthImage(characterId: CharacterId, _level?: LevelNumber): string {
+  return getCharacterBaseImage(characterId);
 }
 
 /**

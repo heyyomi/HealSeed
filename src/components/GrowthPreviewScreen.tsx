@@ -3,7 +3,7 @@ import { ChevronLeft, ArrowRight, Sparkles, Award } from 'lucide-react';
 import type { CharacterId, LevelNumber } from '../types/onboarding';
 import { CHARACTERS } from '../data/characters';
 import { BASE_GROWTH_LEVELS, CHARACTER_GROWTH_STORIES } from '../data/growthStages';
-import { getCharacterGrowthImage } from '../utils/seedRules';
+import { CharacterGrowthImage } from './common/CharacterGrowthImage';
 import './GrowthPreviewScreen.css';
 
 interface GrowthPreviewScreenProps {
@@ -21,7 +21,6 @@ export const GrowthPreviewScreen: React.FC<GrowthPreviewScreenProps> = ({
 
   const character = CHARACTERS.find((c) => c.id === characterId) || CHARACTERS[0];
   const story = CHARACTER_GROWTH_STORIES[characterId]?.[selectedLevel] || CHARACTER_GROWTH_STORIES.sprout[1];
-  const growthImageSrc = getCharacterGrowthImage(characterId, selectedLevel);
 
   return (
     <div className="growth-screen screen-container">
@@ -71,21 +70,19 @@ export const GrowthPreviewScreen: React.FC<GrowthPreviewScreenProps> = ({
             <div
               className="growth-aura"
               style={{
-                borderColor: character.themeColor,
-                opacity: 0.2 + selectedLevel * 0.12,
+                backgroundColor: character.themeColor,
+                opacity: 0.12 + selectedLevel * 0.05,
               }}
             />
 
-            {/* Level-specific Character Growth Image */}
-            <img
-              key={`growth-img-${characterId}-${selectedLevel}`}
-              src={growthImageSrc}
+            {/* Authentic Character Growth Image with Auto Level Detection */}
+            <CharacterGrowthImage
+              key={`growth-char-${characterId}-${selectedLevel}`}
+              characterId={characterId}
+              level={selectedLevel}
               alt={`${character.name} Lv.${selectedLevel} ${story.storyTitle}`}
               className="growth-character-img animate-pop-in"
-              onError={(e) => {
-                // Fallback to base character image if specific level image not loaded
-                (e.currentTarget as HTMLImageElement).src = character.image;
-              }}
+              fallbackSrc={character.image}
             />
           </div>
         </div>

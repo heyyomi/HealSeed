@@ -16,8 +16,9 @@ import {
 } from 'lucide-react';
 import type { OnboardingState, SchoolType, SchoolSearchResult, PrimaryHabitKey, WeeklyGoal } from '../types/onboarding';
 import { CHARACTERS } from '../data/characters';
-import { calculateLevelInfo, getCharacterGrowthImage } from '../utils/seedRules';
+import { calculateLevelInfo } from '../utils/seedRules';
 import { searchSchoolsFromNEIS } from '../services/mealService';
+import { CharacterGrowthImage } from './common/CharacterGrowthImage';
 import './MyScreen.css';
 
 interface MyScreenProps {
@@ -87,7 +88,6 @@ export const MyScreen: React.FC<MyScreenProps> = ({
 
   const character = CHARACTERS.find((c) => c.id === data.characterId) || CHARACTERS[0];
   const levelInfo = calculateLevelInfo(data.seed);
-  const growthImage = getCharacterGrowthImage(character.id, levelInfo.level);
 
   // Meal photos count
   const photoCount = Object.keys(data.mealRecords || {}).length;
@@ -139,7 +139,12 @@ export const MyScreen: React.FC<MyScreenProps> = ({
       <div className="my-profile-card animate-pop-in">
         <div className="my-avatar-col">
           <div className="my-avatar-bubble" style={{ borderColor: character.themeColor }}>
-            <img src={growthImage} alt={character.name} />
+            <CharacterGrowthImage
+              characterId={character.id}
+              level={levelInfo.level}
+              alt={character.name}
+              fallbackSrc={character.image}
+            />
           </div>
           <span className="my-level-pill">Lv.{levelInfo.level} {levelInfo.levelName}</span>
         </div>

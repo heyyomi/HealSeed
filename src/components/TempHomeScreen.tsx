@@ -25,7 +25,7 @@ import type { OnboardingState, DailyRecord, MealData, SchoolType, PrimaryHabitKe
 import { CHARACTERS } from '../data/characters';
 import { CHARACTER_GROWTH_STORIES } from '../data/growthStages';
 import { CONDITION_OPTIONS, type ConditionOption } from '../data/conditionLevels';
-import { calculateLevelInfo, getCharacterGrowthImage, getFormattedDate } from '../utils/seedRules';
+import { calculateLevelInfo, getFormattedDate } from '../utils/seedRules';
 import { getMealBySchoolAndDate } from '../services/mealService';
 import { getRandomHealthQuote } from '../data/greetingQuotes';
 import { TodayMealCard } from './TodayMealCard';
@@ -33,6 +33,7 @@ import { MealDetailScreen } from './MealDetailScreen';
 import { RecordScreen } from './RecordScreen';
 import { TogetherScreen } from './TogetherScreen';
 import { MyScreen } from './MyScreen';
+import { CharacterGrowthImage } from './common/CharacterGrowthImage';
 import { AdminPasswordModal } from './admin/AdminPasswordModal';
 import './TempHomeScreen.css';
 
@@ -98,7 +99,6 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
   const character = CHARACTERS.find((c) => c.id === data.characterId) || CHARACTERS[0];
   const levelInfo = calculateLevelInfo(data.seed);
   const currentGrowthStory = CHARACTER_GROWTH_STORIES[character.id]?.[levelInfo.level];
-  const currentGrowthImage = getCharacterGrowthImage(character.id, levelInfo.level);
 
   // Current date daily record
   const todayRecord: DailyRecord = data.dailyRecords[currentDateString] || {
@@ -614,14 +614,13 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
           <section className="companion-status-card animate-pop-in">
             <div className="companion-visual-col">
               <div className="companion-circle" style={{ borderColor: character.themeColor }}>
-                <img
+                <CharacterGrowthImage
                   key={`home-char-${character.id}-${levelInfo.level}`}
-                  src={currentGrowthImage}
+                  characterId={character.id}
+                  level={levelInfo.level}
                   alt={`${character.name} Lv.${levelInfo.level}`}
                   className="companion-photo animate-pop-in"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = character.image;
-                  }}
+                  fallbackSrc={character.image}
                 />
                 <div className="level-mini-badge">
                   Lv.{levelInfo.level}
@@ -1310,13 +1309,12 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
             {/* Growing Character Stage Visual */}
             <div className="celebration-avatar-stage">
               <div className="celebration-glow-circle" style={{ borderColor: character.themeColor }} />
-              <img
-                src={getCharacterGrowthImage(levelUpCelebration.characterId, levelUpCelebration.newLevel as any)}
+              <CharacterGrowthImage
+                characterId={levelUpCelebration.characterId}
+                level={levelUpCelebration.newLevel as any}
                 alt={`${levelUpCelebration.characterName} Lv.${levelUpCelebration.newLevel}`}
                 className="celebration-char-img animate-pop-in"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = character.image;
-                }}
+                fallbackSrc={CHARACTERS.find((c) => c.id === levelUpCelebration.characterId)?.image}
               />
             </div>
 
