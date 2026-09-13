@@ -10,7 +10,6 @@ interface WelcomeScreenProps {
 }
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart, onSelectAdminRole }) => {
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
 
   return (
@@ -74,79 +73,23 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart, onSelectA
           <ArrowRight size={20} />
         </button>
 
-        <button
-          className="login-sub-btn"
-          onClick={() => setShowLoginModal(true)}
-          id="btn-welcome-login"
-        >
-          <span>이미 계정이 있어요?</span>
-          <strong>로그인 / 관리자</strong>
-        </button>
-
         <div className="safe-badge">
           <ShieldCheck size={14} color="#16A34A" />
           <span>체중·칼로리 비교 없는 즐거운 건강 실천</span>
         </div>
-      </div>
 
-      {/* Login / Admin Demo Modal (Section 2) */}
-      {showLoginModal && (
-        <div className="modal-backdrop" onClick={() => setShowLoginModal(false)}>
-          <div className="modal-card animate-pop-in" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-emoji">🏫</div>
-            <h3 className="modal-title">학교 계정 로그인</h3>
-            <p className="modal-desc">
-              테스트할 사용자 역할을 선택해주세요.
-              <br />
-              (향후 Firebase Authentication 로그인 시 자동 분기됩니다.)
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px', width: '100%' }}>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => {
-                  setShowLoginModal(false);
-                  onStart();
-                }}
-                id="btn-login-student"
-              >
-                <span>🎒 학생 / 교직원 일반 사용자 시작</span>
-              </button>
-
-              <button
-                type="button"
-                className="btn-subtle"
-                style={{
-                  backgroundColor: '#0F172A',
-                  color: '#FFFFFF',
-                  fontWeight: 800,
-                  height: '46px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                }}
-                onClick={() => {
-                  setShowLoginModal(false);
-                  setShowAdminAuthModal(true);
-                }}
-                id="btn-login-admin"
-              >
-                <span>👩‍🏫 학교 관리자(보건교사) 대시보드 진입</span>
-              </button>
-
-              <button
-                type="button"
-                className="btn-subtle"
-                onClick={() => setShowLoginModal(false)}
-              >
-                닫기
-              </button>
-            </div>
-          </div>
+        {/* Discreet Staff/Admin Access Link */}
+        <div className="welcome-staff-link-row">
+          <button
+            type="button"
+            className="btn-discreet-staff-link"
+            onClick={() => setShowAdminAuthModal(true)}
+            id="btn-welcome-staff-auth"
+          >
+            교직원(보건교사) 전용 로그인
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Admin Password Authentication Modal */}
       <AdminPasswordModal

@@ -241,6 +241,29 @@
   margin-top: 4px;
 }
 
+.welcome-staff-link-row {
+  margin-top: 6px;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-discreet-staff-link {
+  background: none;
+  border: none;
+  color: #94A3B8;
+  font-size: 11.5px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all var(--transition-fast);
+}
+
+.btn-discreet-staff-link:hover {
+  color: #475569;
+}
+
 /* Modal */
 .modal-backdrop {
   position: fixed;
