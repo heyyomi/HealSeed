@@ -27,11 +27,13 @@ import { CHARACTER_GROWTH_STORIES } from '../data/growthStages';
 import { CONDITION_OPTIONS, type ConditionOption } from '../data/conditionLevels';
 import { calculateLevelInfo, getCharacterGrowthImage, getFormattedDate } from '../utils/seedRules';
 import { getMealBySchoolAndDate } from '../services/mealService';
+import { getRandomHealthQuote } from '../data/greetingQuotes';
 import { TodayMealCard } from './TodayMealCard';
 import { MealDetailScreen } from './MealDetailScreen';
 import { RecordScreen } from './RecordScreen';
 import { TogetherScreen } from './TogetherScreen';
 import { MyScreen } from './MyScreen';
+import { AdminPasswordModal } from './admin/AdminPasswordModal';
 import './TempHomeScreen.css';
 
 interface TempHomeScreenProps {
@@ -53,6 +55,8 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
   const [toastMessage, setToastMessage] = useState<{ title: string; subtitle: string } | null>(null);
   const [showTestPanel, setShowTestPanel] = useState(false);
   const [showGrowthSheet, setShowGrowthSheet] = useState(false);
+  const [dynamicQuote, setDynamicQuote] = useState<string>(() => getRandomHealthQuote());
+  const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
   const [levelUpCelebration, setLevelUpCelebration] = useState<{
     prevLevel: number;
     newLevel: number;
@@ -573,10 +577,10 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                 alignItems: 'center',
                 gap: '4px',
               }}
-              onClick={() => onUpdateState((p) => ({ ...p, role: 'admin', userType: 'staff' }))}
+              onClick={() => setShowAdminAuthModal(true)}
               id="btn-test-switch-admin"
             >
-              👩‍🏫 보건교사 관리자 모드로 전환
+              👩‍🏫 보건교사 관리자 모드로 전환 (암호 필요)
             </button>
           </div>
         </div>
@@ -587,11 +591,22 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
         <main className="home-scroll-area">
           {/* Welcome Greeting Banner */}
           <section className="welcome-greeting-section animate-fade-in-up">
-            <h2 className="greeting-title">
-              안녕하세요, <span className="user-nickname">{data.nickname}</span>님!
-            </h2>
-            <p className="greeting-subtitle">
-              오늘도 건강한 급식과 습관 하나를 심어볼까요? 🌱
+            <div className="greeting-header-row">
+              <h2 className="greeting-title">
+                안녕하세요, <span className="user-nickname">{data.nickname}</span>님!
+              </h2>
+              <button
+                type="button"
+                className="btn-refresh-quote"
+                onClick={() => setDynamicQuote(getRandomHealthQuote())}
+                title="새로운 응원 문구 보기"
+                aria-label="응원 문구 새로고침"
+              >
+                <Sparkles size={14} />
+              </button>
+            </div>
+            <p className="greeting-subtitle animate-fade-in" key={dynamicQuote}>
+              {dynamicQuote}
             </p>
           </section>
 
@@ -1078,6 +1093,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
           onUpdateSchool={handleUpdateSchool}
           onUpdateWeeklyGoal={handleUpdateWeeklyGoal}
           onResetAll={onReset}
+          onSwitchToAdmin={() => setShowAdminAuthModal(true)}
         />
       )}
 
@@ -1327,6 +1343,16 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
           </div>
         </div>
       )}
+
+      {/* Admin Password Authentication Modal */}
+      <AdminPasswordModal
+        isOpen={showAdminAuthModal}
+        onClose={() => setShowAdminAuthModal(false)}
+        onSuccess={() => {
+          setShowAdminAuthModal(false);
+          onUpdateState((p) => ({ ...p, role: 'admin', userType: 'staff' }));
+        }}
+      />
     </div>
   );
 };

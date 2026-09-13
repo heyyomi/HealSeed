@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   LogOut,
-  CheckCircle2
+  CheckCircle2,
+  Lock,
+  Check,
+  KeyRound
 } from 'lucide-react';
+import { getStoredAdminPassword, setAdminPassword } from '../../services/adminAuthService';
 
 interface AdminSettingsScreenProps {
   schoolName: string;
@@ -13,6 +17,21 @@ export const AdminSettingsScreen: React.FC<AdminSettingsScreenProps> = ({
   schoolName,
   onSwitchToUserMode,
 }) => {
+  const [currentPassword, setCurrentPassword] = useState<string>(() => getStoredAdminPassword());
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newPassword.trim();
+    if (trimmed.length >= 4) {
+      setAdminPassword(trimmed);
+      setCurrentPassword(trimmed);
+      setNewPassword('');
+      setPasswordSuccess(true);
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    }
+  };
   return (
     <div className="admin-content-container animate-fade-in-up">
       {/* Page Header */}
@@ -117,6 +136,75 @@ export const AdminSettingsScreen: React.FC<AdminSettingsScreenProps> = ({
             <span>익명 기반 학교 집계 통계만 관리자 제공</span>
           </div>
         </div>
+      </div>
+
+      {/* Admin Password Security Settings */}
+      <div className="admin-section-card">
+        <div className="section-card-header">
+          <div className="header-title-wrap">
+            <span className="header-icon-bubble">
+              <Lock size={18} />
+            </span>
+            <div>
+              <h3 className="card-section-title">관리자 접속 암호 관리</h3>
+              <span className="card-section-desc">관리자 모드 진입 시 확인하는 보안 비밀번호를 변경해요.</span>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <input
+                type="text"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="새로운 관리자 암호 (4자리 이상)"
+                style={{
+                  width: '100%',
+                  height: '42px',
+                  borderRadius: '10px',
+                  border: '1.5px solid #CBD5E1',
+                  padding: '0 12px',
+                  fontSize: '13.5px',
+                  backgroundColor: '#F8FAFC',
+                }}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={newPassword.trim().length < 4}
+              style={{
+                height: '42px',
+                padding: '0 16px',
+                backgroundColor: newPassword.trim().length >= 4 ? '#0F172A' : '#94A3B8',
+                color: '#FFFFFF',
+                borderRadius: '10px',
+                border: 'none',
+                fontWeight: 800,
+                fontSize: '13px',
+                cursor: newPassword.trim().length >= 4 ? 'pointer' : 'not-allowed',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+              }}
+            >
+              <KeyRound size={15} />
+              <span>암호 변경</span>
+            </button>
+          </div>
+
+          {passwordSuccess && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16A34A', fontSize: '12.5px', fontWeight: 700 }}>
+              <Check size={16} />
+              <span>관리자 암호가 성공적으로 변경되었습니다.</span>
+            </div>
+          )}
+
+          <span style={{ fontSize: '11.5px', color: '#64748B' }}>
+            * 현재 암호: <strong>{currentPassword}</strong> (초기 기본값: <code>healseed2026</code> 또는 <code>1234</code>)
+          </span>
+        </form>
       </div>
 
       {/* Mode Switch Button */}

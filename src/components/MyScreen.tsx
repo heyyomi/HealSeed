@@ -25,6 +25,7 @@ interface MyScreenProps {
   onUpdateSchool: (schoolName: string, schoolType: SchoolType) => void;
   onUpdateWeeklyGoal?: (goalOrSeed: number | Partial<WeeklyGoal>) => void;
   onResetAll: () => void;
+  onSwitchToAdmin?: () => void;
 }
 
 const SCHOOL_TYPE_LABELS: Record<SchoolType, string> = {
@@ -45,6 +46,7 @@ export const MyScreen: React.FC<MyScreenProps> = ({
   onUpdateSchool,
   onUpdateWeeklyGoal,
   onResetAll,
+  onSwitchToAdmin,
 }) => {
   const [showEditSchoolModal, setShowEditSchoolModal] = useState(false);
   const [editSchoolName, setEditSchoolName] = useState(data.schoolName);
@@ -288,6 +290,32 @@ export const MyScreen: React.FC<MyScreenProps> = ({
             <ChevronRight size={18} className="chevron-icon" />
           </div>
         </div>
+
+        {/* School Admin Mode Switch Item (Password Protected) */}
+        {onSwitchToAdmin && (
+          <div
+            id="btn-open-admin-mode"
+            className="setting-menu-item"
+            onClick={onSwitchToAdmin}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="setting-icon-box" style={{ backgroundColor: '#0F172A', color: '#FFFFFF' }}>
+              <Lock size={18} />
+            </div>
+            <div className="setting-item-content">
+              <strong className="setting-item-title">학교 관리자(보건교사) 모드</strong>
+              <span className="setting-item-subtitle">
+                대시보드 및 학교 챌린지 관리 (보안 암호 필요)
+              </span>
+            </div>
+            <div className="setting-action-wrap">
+              <span style={{ fontSize: '11px', fontWeight: 800, backgroundColor: '#F1F5F9', color: '#475569', padding: '2px 8px', borderRadius: '100px' }}>
+                암호 인증
+              </span>
+              <ChevronRight size={18} className="chevron-icon" />
+            </div>
+          </div>
+        )}
 
         {/* Wellness Promise Info */}
         <div className="setting-info-box">

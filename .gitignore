@@ -28,3 +28,7 @@ dist-ssr
 
 # Scratch
 scratch/
+
+# User screenshots
+healseed*.png
+

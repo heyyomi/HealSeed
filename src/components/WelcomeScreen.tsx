@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
 import { CHARACTERS } from '../data/characters';
+import { AdminPasswordModal } from './admin/AdminPasswordModal';
 import './WelcomeScreen.css';
 
 interface WelcomeScreenProps {
@@ -10,6 +11,7 @@ interface WelcomeScreenProps {
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart, onSelectAdminRole }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
 
   return (
     <div className="welcome-screen">
@@ -127,7 +129,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart, onSelectA
                 }}
                 onClick={() => {
                   setShowLoginModal(false);
-                  onSelectAdminRole?.();
+                  setShowAdminAuthModal(true);
                 }}
                 id="btn-login-admin"
               >
@@ -145,6 +147,16 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart, onSelectA
           </div>
         </div>
       )}
+
+      {/* Admin Password Authentication Modal */}
+      <AdminPasswordModal
+        isOpen={showAdminAuthModal}
+        onClose={() => setShowAdminAuthModal(false)}
+        onSuccess={() => {
+          setShowAdminAuthModal(false);
+          onSelectAdminRole?.();
+        }}
+      />
     </div>
   );
 };
