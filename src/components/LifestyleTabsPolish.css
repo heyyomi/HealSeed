@@ -47,6 +47,32 @@
   background: #d1fae5;
 }
 
+.meal-theme .lifestyle-badge {
+  color: #c2410c;
+  background: #ffedd5;
+}
+
+.meal-lifestyle-screen .lifestyle-feature-card {
+  border-color: #fed7aa;
+  background: linear-gradient(145deg, #fff7ed 0%, #ffffff 48%);
+}
+
+.meal-lifestyle-screen .lifestyle-icon-box {
+  color: #ea580c;
+  background: #ffedd5;
+}
+
+.meal-lifestyle-screen .lifestyle-status-pill:not(.neutral) {
+  color: #c2410c;
+  background: #ffedd5;
+}
+
+.meal-lifestyle-screen .secondary-action {
+  border-color: #fed7aa;
+  color: #c2410c;
+  background: #fff7ed;
+}
+
 .lifestyle-date-nav {
   min-height: 54px;
   padding: 7px 10px;

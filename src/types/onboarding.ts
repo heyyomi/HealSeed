@@ -100,6 +100,7 @@ export interface DailyRecord {
   // 4 Primary Seed Habits (Each +1 Seed, Max 4 Seed/day)
   balancedMeal: boolean; // 급식 골고루 먹기 / 골고루 먹어보았어요
   water: boolean;        // 물 충분히 마시기 / 물을 함께 마셨어요
+  waterCups?: number;    // 하루 물 마시기 진행도 (0~5컵)
   activity: boolean;     // 몸 움직이기
   mindCare: boolean;     // 마음 돌보기
   // Meal Specific Mindful Eating Habits

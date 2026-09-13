@@ -11,6 +11,7 @@ import {
   Droplets,
   Activity,
   Heart,
+  GlassWater,
   ChevronLeft,
   ChevronRight,
   PartyPopper,
@@ -130,6 +131,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     (todayRecord.mindCare ? 1 : 0);
 
   const isAllCompletedToday = completedTodayCount === 4;
+  const todayWaterCups = Math.min(5, Math.max(0, todayRecord.waterCups ?? (todayRecord.water ? 5 : 0)));
   const calendarYear = calendarMonth.getFullYear();
   const calendarMonthIndex = calendarMonth.getMonth();
   const calendarDays = new Date(calendarYear, calendarMonthIndex + 1, 0).getDate();
@@ -329,6 +331,48 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
           },
         };
       });
+    }
+  };
+
+  const handleSetWaterCups = (cups: number) => {
+    const nextCups = cups === todayWaterCups ? Math.max(0, cups - 1) : cups;
+    onUpdateState((prev) => {
+      const previous = prev.dailyRecords[currentDateString] || {
+        date: currentDateString, balancedMeal: false, water: false, activity: false,
+        mindCare: false, slowEating: false, listenToBody: false,
+      };
+      const wasComplete = Boolean(previous.water);
+      const isComplete = nextCups >= 5;
+      let nextSeed = prev.seed;
+      if (!wasComplete && isComplete) nextSeed += 1;
+      if (wasComplete && !isComplete) nextSeed = Math.max(0, nextSeed - 1);
+
+      const currentGoal = ensureWeeklyGoal(prev.weeklyGoal);
+      let nextGoal = currentGoal;
+      if (currentGoal.type === 'preset' && currentGoal.habitType === 'water') {
+        nextGoal = {
+          ...currentGoal,
+          completedDates: isComplete
+            ? Array.from(new Set([...currentGoal.completedDates, currentDateString]))
+            : currentGoal.completedDates.filter((date) => date !== currentDateString),
+        };
+      }
+
+      return {
+        ...prev,
+        seed: nextSeed,
+        level: calculateLevelInfo(nextSeed).level,
+        weeklyGoal: nextGoal,
+        dailyRecords: {
+          ...prev.dailyRecords,
+          [currentDateString]: { ...previous, waterCups: nextCups, water: isComplete },
+        },
+      };
+    });
+
+    if (nextCups === 5 && todayWaterCups < 5) {
+      setToastMessage({ title: '+1 Seed 🌱', subtitle: '오늘 물 5컵을 채웠어요!' });
+      setTimeout(() => setToastMessage(null), 2500);
     }
   };
 
@@ -786,8 +830,11 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
               <div className="home-condition-options">{CONDITION_OPTIONS.map((option) => <button key={option.level} type="button" className={todayRecord.condition?.level === option.level ? 'selected' : ''} onClick={() => handleSelectCondition(option)} aria-label={option.label} aria-pressed={todayRecord.condition?.level === option.level}><span>{option.emoji}</span><small>{option.label}</small></button>)}</div>
             </div>
             <div className="home-summary-grid">
-              <button type="button" onClick={() => setActiveTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '실천 완료' : '기록하기'}</b></button>
-              <button type="button" className={todayRecord.water ? 'done' : ''} onClick={() => handleToggleHabit('water', true)}><Droplets /><span>물 마시기</span><b>{todayRecord.water ? '완료' : '+1 Seed'}</b></button>
+              <button type="button" className="meal-summary-card" onClick={() => setActiveTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '실천 완료' : '기록하기'}</b></button>
+              <div className={`home-water-cup-card ${todayRecord.water ? 'done' : ''}`}>
+                <div className="water-cup-heading"><Droplets /><span><strong>물 마시기</strong><small>{todayWaterCups}/5컵 · 5컵 완료 시 +1 Seed</small></span><b>{todayRecord.water ? '완료' : `${todayWaterCups}컵`}</b></div>
+                <div className="water-cup-buttons">{[1, 2, 3, 4, 5].map((cup) => <button key={cup} type="button" className={cup <= todayWaterCups ? 'filled' : ''} onClick={() => handleSetWaterCups(cup)} aria-label={`물 ${cup}컵 기록`} aria-pressed={cup <= todayWaterCups}><GlassWater size={21} /><small>{cup}</small></button>)}</div>
+              </div>
               <button type="button" onClick={() => setActiveTab('movement')}><Activity /><span>오늘의 운동</span><b>{todayRecord.movementRecord ? `${todayRecord.movementRecord.durationMinutes}분` : '시작하기'}</b></button>
               <button type="button" className={todayRecord.mindCareRecord?.completed ? 'done' : ''} onClick={() => setActiveTab('mind')}><Heart /><span>마음 돌보기</span><b>{todayRecord.mindCareRecord?.completed ? '실천 완료' : '시작하기'}</b></button>
             </div>

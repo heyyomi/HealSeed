@@ -2410,3 +2410,98 @@
   background: #dcfce7;
   box-shadow: 0 3px 9px rgba(34, 197, 94, 0.14);
 }
+.home-summary-grid .meal-summary-card {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.home-summary-grid .meal-summary-card svg,
+.home-summary-grid .meal-summary-card b {
+  color: #ea580c;
+}
+
+.home-water-cup-card {
+  grid-column: 1 / -1;
+  padding: 12px;
+  border: 1px solid #bae6fd;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f0f9ff, #fff);
+}
+
+.home-water-cup-card.done {
+  border-color: #7dd3fc;
+  background: #e0f2fe;
+}
+
+.water-cup-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.water-cup-heading > svg {
+  flex-shrink: 0;
+  color: #0ea5e9;
+}
+
+.water-cup-heading > span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.water-cup-heading strong {
+  color: #334155;
+  font-size: 13px;
+}
+
+.water-cup-heading small {
+  color: #64748b;
+  font-size: 9.5px;
+}
+
+.water-cup-heading > b {
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #0369a1;
+  background: #e0f2fe;
+  font-size: 10px;
+}
+
+.water-cup-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.water-cup-buttons button {
+  min-width: 0;
+  min-height: 49px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px 2px;
+  border: 1px solid #dbeafe;
+  border-radius: 11px;
+  color: #94a3b8;
+  background: #fff;
+}
+
+.water-cup-buttons button.filled {
+  border-color: #38bdf8;
+  color: #0284c7;
+  background: #e0f2fe;
+  box-shadow: 0 3px 8px rgba(14, 165, 233, 0.12);
+}
+
+.water-cup-buttons small {
+  font-size: 8px;
+  font-weight: 800;
+}
+
+#tab-meal.active {
+  color: #f97316;
+}
