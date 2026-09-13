@@ -125,10 +125,10 @@ export const MealScreen: React.FC<MealScreenProps> = ({
             <span>🥗 골고루 먹기</span><b>{dailyRecord.balancedMeal ? '완료' : '👛 +1 Seed'}</b>
           </button>
           <button className={dailyRecord.slowEating ? 'done' : ''} onClick={() => onToggleHabit('slowEating', false)}>
-            <span>천천히 식사하기</span><b>{dailyRecord.slowEating ? '완료' : '기록'}</b>
+            <span>⏳ 천천히 식사하기</span><b>{dailyRecord.slowEating ? '완료' : '기록'}</b>
           </button>
           <button className={dailyRecord.listenToBody ? 'done' : ''} onClick={() => onToggleHabit('listenToBody', false)}>
-            <span>몸의 배부름에 귀 기울이기</span><b>{dailyRecord.listenToBody ? '완료' : '기록'}</b>
+            <span>👂 몸의 배부름에 귀 기울이기</span><b>{dailyRecord.listenToBody ? '완료' : '기록'}</b>
           </button>
         </div>
       </section>
