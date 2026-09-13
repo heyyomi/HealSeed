@@ -77,7 +77,7 @@ export const MovementScreen: React.FC<MovementScreenProps> = ({ date, dailyRecor
       <section className="lifestyle-card movement-action-card">
         <div className="lifestyle-section-head"><h3>{selected.name}</h3><span className="lifestyle-status-pill neutral">{selected.location}</span></div><p>{selected.description}</p>
         <div className="duration-options">{[5, 10, 15].map((minutes) => <button key={minutes} className={duration === minutes ? 'selected' : ''} onClick={() => setDuration(minutes)}>{minutes}분</button>)}</div>
-        <button type="button" className="primary-action" onClick={() => onSave({ date, activityId: selected.id, activityName: selected.name, durationMinutes: duration })}>{dailyRecord.activity ? '움직임 기록 업데이트' : '오늘 실천했어요 +1 Seed'}</button>
+        <button type="button" className="primary-action" onClick={() => onSave({ date, activityId: selected.id, activityName: selected.name, durationMinutes: duration })}>{dailyRecord.activity ? '움직임 기록 업데이트' : '오늘 실천했어요 👛 +1 Seed'}</button>
       </section>
 
       <section className="lifestyle-card compact-history"><h3>최근 움직임 기록</h3>{recentDates.map((itemDate) => { const record = dailyRecords[itemDate]?.movementRecord; return <button key={itemDate} onClick={() => onSelectDate(itemDate)}><span><strong>{dateLabel(itemDate)}</strong><small>{record?.activityName || '움직임 미기록'}</small></span><b>{record ? `${record.durationMinutes}분` : '미기록'}</b></button>; })}</section>

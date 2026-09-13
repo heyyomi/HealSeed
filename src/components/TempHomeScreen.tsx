@@ -810,7 +810,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
           <section className="home-overview-card animate-fade-in-up">
             <div className="home-overview-heading">
               <div><span>오늘의 건강생활</span><h3>{getFormattedDateLabel(getFormattedDate())}</h3></div>
-              <strong>+{completedTodayCount} Seed</strong>
+              <strong><span className="seed-badge-emoji" role="img" aria-label="Seed 지갑">👛</span> +{completedTodayCount} Seed</strong>
             </div>
             <div className="home-condition-panel">
               <div className="home-condition-heading">
@@ -822,7 +822,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
             </div>
             <div className="home-summary-grid">
               <div id="home-water-tracker" className={`home-water-cup-card ${todayRecord.water ? 'done' : ''}`}>
-                <div className="water-cup-heading"><Droplets /><span><strong>물 마시기</strong><small>{todayWaterCups}/5컵 · 5컵 완료 시 +1 Seed</small></span><b>{todayRecord.water ? '완료' : `${todayWaterCups}컵`}</b></div>
+                <div className="water-cup-heading"><Droplets /><span><strong>물 마시기</strong><small>{todayWaterCups}/5컵 · 5컵 완료 시 👛 +1 Seed</small></span><b>{todayRecord.water ? '완료' : `${todayWaterCups}컵`}</b></div>
                 <div className="water-cup-buttons">{[1, 2, 3, 4, 5].map((cup) => <button key={cup} type="button" className={cup <= todayWaterCups ? 'filled' : ''} onClick={() => handleSetWaterCups(cup)} aria-label={`물 ${cup}컵 기록`} aria-pressed={cup <= todayWaterCups}><GlassWater size={21} /><small>{cup}</small></button>)}</div>
               </div>
               <button type="button" className="home-compact-action" onClick={() => setActiveTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '완료' : '기록하기'}</b></button>

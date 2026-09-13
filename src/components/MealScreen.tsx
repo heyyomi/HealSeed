@@ -121,7 +121,7 @@ export const MealScreen: React.FC<MealScreenProps> = ({
         <div className="lifestyle-section-head"><div className="lifestyle-card-title"><span className="lifestyle-icon-box"><CheckCircle2 size={18} /></span><h3>식사 습관</h3></div><span className="lifestyle-status-pill neutral">{Number(dailyRecord.balancedMeal) + Number(dailyRecord.slowEating) + Number(dailyRecord.listenToBody)}/3 실천</span></div>
         <div className="meal-habit-list">
           <button className={dailyRecord.balancedMeal ? 'done' : ''} onClick={() => onToggleHabit('balancedMeal', true)}>
-            <span>🥗 골고루 먹기</span><b>{dailyRecord.balancedMeal ? '완료' : '+1 Seed'}</b>
+            <span>🥗 골고루 먹기</span><b>{dailyRecord.balancedMeal ? '완료' : '👛 +1 Seed'}</b>
           </button>
           <button className={dailyRecord.slowEating ? 'done' : ''} onClick={() => onToggleHabit('slowEating', false)}>
             <span>천천히 식사하기</span><b>{dailyRecord.slowEating ? '완료' : '기록'}</b>
