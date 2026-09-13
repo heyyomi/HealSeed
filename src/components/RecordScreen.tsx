@@ -167,6 +167,21 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
                 <p className="meal-box-content">{mealPreview}</p>
               </div>
 
+              {/* Movement Summary if recorded (Section 8) */}
+              {rec.movementRecord && (
+                <div className="record-movement-box">
+                  <div className="movement-box-label">
+                    <Activity size={13} className="movement-icon-tag" />
+                    <span>오늘의 움직임</span>
+                  </div>
+                  <div className="movement-box-content">
+                    <span className="movement-content-name">{rec.movementRecord.activityName}</span>
+                    <span className="movement-content-time">{rec.movementRecord.durationMinutes}분</span>
+                    <span className="movement-content-done">✓ 실천 완료</span>
+                  </div>
+                </div>
+              )}
+
               {/* 4 Health Habits Status */}
               <div className="record-habits-grid">
                 <div className={`habit-status-chip ${rec.balancedMeal ? 'done' : ''}`}>
@@ -192,9 +207,9 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
       </div>
 
       {/* ================================================== */}
-      {/* 13. 나의 한 끼 기록 상세 모달 (Section 13 Modal) */}
+      {/* 13. 나의 한 끼 기록 & 건강 기록 상세 모달 */}
       {/* ================================================== */}
-      {selectedArchiveDate && selectedMealRecord && (
+      {selectedArchiveDate && (
         <div
           className="modal-backdrop"
           onClick={() => setSelectedArchiveDate(null)}
@@ -206,7 +221,9 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
             <div className="archive-modal-header">
               <div className="archive-modal-title-col">
                 <div className="archive-modal-badge-row">
-                  <span className="archive-modal-badge">📸 나의 한 끼 기록</span>
+                  <span className="archive-modal-badge">
+                    {selectedMealRecord?.mealImageUrl ? '📸 나의 한 끼 & 건강 기록' : '🌱 나의 건강 기록'}
+                  </span>
                   <span className="archive-school-tag">{schoolName}</span>
                 </div>
                 <h3 className="archive-modal-date">{formatHeaderDate(selectedArchiveDate)}</h3>
@@ -221,17 +238,19 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
               </button>
             </div>
 
-            {/* Meal Photo */}
-            <div className="archive-photo-frame">
-              <img
-                src={selectedMealRecord.mealImageUrl}
-                alt={`${selectedArchiveDate} 급식판 사진`}
-                className="archive-full-photo"
-              />
-            </div>
+            {/* Meal Photo (if exists) */}
+            {selectedMealRecord?.mealImageUrl && (
+              <div className="archive-photo-frame">
+                <img
+                  src={selectedMealRecord.mealImageUrl}
+                  alt={`${selectedArchiveDate} 급식판 사진`}
+                  className="archive-full-photo"
+                />
+              </div>
+            )}
 
-            {/* User Memo */}
-            {selectedMealRecord.mealMemo && (
+            {/* User Memo (if exists) */}
+            {selectedMealRecord?.mealMemo && (
               <div className="archive-memo-card">
                 <span className="archive-memo-label">💬 나의 한 끼 메모</span>
                 <p className="archive-memo-text">"{selectedMealRecord.mealMemo}"</p>
@@ -256,6 +275,30 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
                 <p className="archive-no-menu">급식 식단 정보가 없습니다.</p>
               )}
             </div>
+
+            {/* Movement Details on that date (Section 8) */}
+            {selectedDailyRecord?.movementRecord && (
+              <div className="archive-section-card archive-movement-card">
+                <div className="archive-section-header">
+                  <Activity size={15} />
+                  <strong>그날의 움직임 실천</strong>
+                </div>
+                <div className="archive-movement-detail-box">
+                  <div className="movement-detail-left">
+                    <span className="movement-detail-icon">🏃</span>
+                    <div className="movement-detail-texts">
+                      <strong className="movement-detail-name">
+                        {selectedDailyRecord.movementRecord.activityName}
+                      </strong>
+                      <span className="movement-detail-duration">
+                        실제 움직인 시간: {selectedDailyRecord.movementRecord.durationMinutes}분
+                      </span>
+                    </div>
+                  </div>
+                  <span className="movement-detail-badge">✓ 실천 완료</span>
+                </div>
+              </div>
+            )}
 
             {/* Habits and Seed Earned */}
             <div className="archive-section-card">

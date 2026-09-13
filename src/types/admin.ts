@@ -58,4 +58,4 @@ export interface SchoolChallenge {
   createdAt: string;
 }
 
-export type AdminTab = 'dashboard' | 'participation' | 'challenges' | 'settings';
+export type AdminTab = 'dashboard' | 'participation' | 'challenges' | 'movements' | 'settings';

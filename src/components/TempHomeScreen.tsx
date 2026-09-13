@@ -344,6 +344,61 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     setTimeout(() => setToastMessage(null), 2500);
   };
 
+  // Save movement record (Section 6 & 7)
+  const handleSaveMovementRecord = (record: {
+    date: string;
+    activityId: string;
+    activityName: string;
+    durationMinutes: number;
+  }) => {
+    onUpdateState((prev) => {
+      const prevRec = prev.dailyRecords[record.date] || {
+        date: record.date,
+        balancedMeal: false,
+        water: false,
+        activity: false,
+        mindCare: false,
+        slowEating: false,
+        listenToBody: false,
+      };
+
+      const wasAlreadyDone = !!prevRec.activity;
+
+      const nextRec: DailyRecord = {
+        ...prevRec,
+        activity: true, // 몸 움직이기 실천 완료
+        movementRecord: {
+          date: record.date,
+          activityId: record.activityId,
+          activityName: record.activityName,
+          durationMinutes: record.durationMinutes,
+          completed: true,
+          completedAt: new Date().toISOString(),
+        },
+      };
+
+      // 1일 1 Seed 제한: 오늘 아직 몸 움직이기로 Seed를 받지 않은 경우에만 +1 Seed
+      const nextSeed = !wasAlreadyDone ? prev.seed + 1 : prev.seed;
+      const nextLvl = calculateLevelInfo(nextSeed).level;
+
+      return {
+        ...prev,
+        seed: nextSeed,
+        level: nextLvl,
+        dailyRecords: {
+          ...prev.dailyRecords,
+          [record.date]: nextRec,
+        },
+      };
+    });
+
+    setToastMessage({
+      title: '움직임 실천 완료 🏃',
+      subtitle: `${record.activityName} ${record.durationMinutes}분 완료! +1 Seed가 적립되었습니다.`,
+    });
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
   // If Meal Detail view is open, render MealDetailScreen
   if (isDetailOpen && currentMeal) {
     return (
@@ -355,6 +410,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
         onBack={() => setIsDetailOpen(false)}
         onToggleHabit={handleToggleHabit}
         onSaveMealRecord={handleSaveMealRecord}
+        onSaveMovementRecord={handleSaveMovementRecord}
       />
     );
   }

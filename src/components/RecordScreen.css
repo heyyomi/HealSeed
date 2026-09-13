@@ -456,3 +456,122 @@
   margin-top: 4px;
 }
 
+/* ================================================== */
+/* Movement Record in Record Screen (Section 8) */
+/* ================================================== */
+.record-movement-box {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.movement-icon-tag {
+  color: var(--primary-600);
+}
+
+.record-movement-box .movement-box-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748B;
+}
+
+.record-movement-box .movement-box-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.movement-content-name {
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.movement-content-time {
+  font-weight: 700;
+  color: #2563EB;
+  background-color: #EFF6FF;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+}
+
+.movement-content-done {
+  font-size: 11px;
+  font-weight: 700;
+  color: #15803D;
+  margin-left: auto;
+}
+
+/* Modal movement detail card */
+.archive-movement-card {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);
+  border-color: #BBF7D0;
+}
+
+.archive-movement-detail-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background-color: #FFFFFF;
+  border: 1px solid #86EFAC;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.movement-detail-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.movement-detail-icon {
+  font-size: 22px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #DCFCE7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.movement-detail-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.movement-detail-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #166534;
+}
+
+.movement-detail-duration {
+  font-size: 11.5px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+.movement-detail-badge {
+  font-size: 11px;
+  font-weight: 800;
+  background-color: #DCFCE7;
+  color: #15803D;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid #86EFAC;
+  flex-shrink: 0;
+}
+
+

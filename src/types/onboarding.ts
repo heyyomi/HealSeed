@@ -55,6 +55,30 @@ export interface MealData {
   noMealReason?: string;
 }
 
+export interface MovementActivity {
+  id: string;
+  icon: string;
+  name: string;
+  type: string;            // 활동 유형 (e.g. '서서 하는 전신 스트레칭', '목·어깨·허리 스트레칭', '가벼운 걷기', '저강도 리듬·댄스', '가벼운 맨몸 전신 활동')
+  durationMinutes: number; // 기본 권장시간 (분)
+  durationText?: string;   // 권장시간 텍스트 (e.g. '5분', '10분', '5~10분')
+  location: string;        // 권장 장소 (e.g. '교실', '운동장 또는 복도', '넓은 공간', '체육공간')
+  description: string;     // 활동 설명
+  youtubeUrl?: string;     // 관리자 등록 YouTube URL
+  videoSource?: string;    // 영상 출처명 (e.g. '국민건강보험공단')
+  isActive: boolean;       // 활성/비활성 여부
+  isFeatured: boolean;     // 오늘의 추천 여부
+}
+
+export interface MovementRecord {
+  date: string;
+  activityId: string;
+  activityName: string;
+  durationMinutes: number;
+  completed: boolean;
+  completedAt: string;
+}
+
 export interface DailyRecord {
   date: string;
   // 4 Primary Seed Habits (Each +1 Seed, Max 4 Seed/day)
@@ -65,6 +89,8 @@ export interface DailyRecord {
   // Meal Specific Mindful Eating Habits
   slowEating: boolean;   // 천천히 식사했어요
   listenToBody: boolean; // 내 몸의 배고픔과 포만감에 귀 기울였어요
+  // Movement Record
+  movementRecord?: MovementRecord;
 }
 
 export interface UserProfile {

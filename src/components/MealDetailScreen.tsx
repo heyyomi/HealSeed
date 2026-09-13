@@ -11,18 +11,23 @@ import {
   Check,
   RotateCcw,
   Lock,
-  Activity,
   Smile,
   ChevronDown,
   ChevronUp,
   ChevronRight,
   Flame,
-  X
+  X,
+  Play
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import type { MealData, DailyRecord, MealRecord } from '../types/onboarding';
+import type { MealData, DailyRecord, MealRecord, MovementActivity } from '../types/onboarding';
 import { getMenuIcon, isWeekend } from '../services/mealService';
 import { compressAndConvertToBase64 } from '../services/photoService';
+import {
+  getActiveMovementActivities,
+  getFeaturedMovement,
+  getYouTubeEmbedUrl
+} from '../services/movementService';
 import './MealDetailScreen.css';
 
 interface MealDetailScreenProps {
@@ -33,6 +38,12 @@ interface MealDetailScreenProps {
   onBack: () => void;
   onToggleHabit: (key: keyof DailyRecord, isPrimarySeedHabit: boolean) => void;
   onSaveMealRecord?: (record: { mealImageUrl: string; mealMemo: string }) => void;
+  onSaveMovementRecord?: (record: {
+    date: string;
+    activityId: string;
+    activityName: string;
+    durationMinutes: number;
+  }) => void;
 }
 
 const MEMO_PRESETS = [
@@ -40,58 +51,6 @@ const MEMO_PRESETS = [
   '천천히 먹으려고 노력했어요. ⏳',
   '오늘은 물도 함께 마셨어요. 💧',
   '내 몸의 기분 좋은 배부름을 느꼈어요. 🥗',
-];
-
-interface MovementOption {
-  id: string;
-  icon: string;
-  name: string;
-  desc: string;
-  defaultMinutes: number;
-  intensity: string;
-}
-
-const MOVEMENT_OPTIONS: MovementOption[] = [
-  {
-    id: 'walk-10',
-    icon: '🚶',
-    name: '10분 가볍게 걷기',
-    desc: '운동장 또는 복도 10분 걷기',
-    defaultMinutes: 10,
-    intensity: '가볍게',
-  },
-  {
-    id: 'stretch-5',
-    icon: '🧘',
-    name: '5분 스트레칭',
-    desc: '목과 어깨, 허리를 시원하게 펴주는 스트레칭',
-    defaultMinutes: 5,
-    intensity: '편안하게',
-  },
-  {
-    id: 'stairs',
-    icon: '🪜',
-    name: '가까운 층 계단 이용하기',
-    desc: '엘리베이터 대신 가까운 층 계단으로 오르기',
-    defaultMinutes: 5,
-    intensity: '활기차게',
-  },
-  {
-    id: 'break-walk',
-    icon: '🌳',
-    name: '쉬는 시간에 잠깐 걷기',
-    desc: '친구와 함께 복도나 교정 거닐기',
-    defaultMinutes: 10,
-    intensity: '가볍게',
-  },
-  {
-    id: 'fun-move',
-    icon: '🏃',
-    name: '10분 즐겁게 움직이기',
-    desc: '신나는 음악과 함께 활력 충전하기',
-    defaultMinutes: 10,
-    intensity: '신나게',
-  },
 ];
 
 const DURATION_PRESETS = [5, 10, 15];
@@ -104,6 +63,7 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
   onBack,
   onToggleHabit,
   onSaveMealRecord,
+  onSaveMovementRecord,
 }) => {
   const isNoMeal = meal.isNoMealDay || isWeekend(meal.date);
 
@@ -119,11 +79,20 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showPhotoChoiceModal, setShowPhotoChoiceModal] = useState<boolean>(false);
 
-  // Section 4: Movement Selection & Duration Logging
-  const [selectedMovementId, setSelectedMovementId] = useState<string>('walk-10');
-  const [showOtherMovements, setShowOtherMovements] = useState<boolean>(false);
-  const [durationPreset, setDurationPreset] = useState<number | 'custom'>(10);
-  const [customMinutes, setCustomMinutes] = useState<string>('10');
+  // Section 4: Movement Selection & Duration Logging (Service Driven)
+  const [movementActivities] = useState<MovementActivity[]>(() => getActiveMovementActivities());
+  const initialFeatured = getFeaturedMovement();
+  const [selectedMovementId, setSelectedMovementId] = useState<string>(
+    dailyRecord.movementRecord?.activityId || initialFeatured.id
+  );
+  const [showOtherMovementsSheet, setShowOtherMovementsSheet] = useState<boolean>(false);
+  const [showVideoModal, setShowVideoModal] = useState<boolean>(false);
+  const [durationPreset, setDurationPreset] = useState<number | 'custom'>(
+    dailyRecord.movementRecord?.durationMinutes || initialFeatured.durationMinutes || 10
+  );
+  const [customMinutes, setCustomMinutes] = useState<string>(
+    String(dailyRecord.movementRecord?.durationMinutes || initialFeatured.durationMinutes || 10)
+  );
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const albumInputRef = useRef<HTMLInputElement>(null);
@@ -163,12 +132,14 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
 
   // Selected movement object
   const activeMovement =
-    MOVEMENT_OPTIONS.find((m) => m.id === selectedMovementId) || MOVEMENT_OPTIONS[0];
+    movementActivities.find((m) => m.id === selectedMovementId) ||
+    movementActivities[0] ||
+    initialFeatured;
 
   // Calculated effective minutes
   const effectiveMinutes =
     durationPreset === 'custom'
-      ? Math.max(1, parseInt(customMinutes, 10) || 10)
+      ? Math.max(1, parseInt(customMinutes, 10) || activeMovement.durationMinutes || 10)
       : durationPreset;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,12 +198,19 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
 
   // Activity Habit Sync (+1 Seed, preventing duplicate seed)
   const handleCompleteMovement = () => {
-    if (dailyRecord.activity) {
-      // 이미 오늘 몸 움직이기로 Seed를 받았으면 중복 지급하지 않음
-      return;
+    // 1. Save structured movement record
+    onSaveMovementRecord?.({
+      date: meal.date,
+      activityId: activeMovement.id,
+      activityName: activeMovement.name,
+      durationMinutes: effectiveMinutes,
+    });
+
+    // 2. Award +1 Seed if not already awarded for activity today
+    if (!dailyRecord.activity) {
+      onToggleHabit('activity', true);
     }
 
-    onToggleHabit('activity', true);
     try {
       confetti({
         particleCount: 45,
@@ -596,68 +574,85 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
           </span>
         </div>
 
-        {/* 4-1. 기본 화면: 추천 움직임 1개만 표시 */}
+        {/* 4-1. 기본 화면: 추천 움직임 1개만 간결하게 표시 */}
         <div className="featured-movement-card animate-pop-in">
           <div className="featured-header-row">
-            <span className="featured-badge">🚶 오늘의 추천</span>
-            <span className="featured-intensity-tag">{effectiveMinutes}분 · {activeMovement.intensity}</span>
+            <span className="featured-badge">
+              {activeMovement.icon} 오늘의 추천
+            </span>
+            <span className="featured-specs-tag">
+              {activeMovement.durationText || `${activeMovement.durationMinutes}분`} · {activeMovement.location}
+            </span>
           </div>
+
           <div className="featured-main-body">
-            <span className="featured-icon">{activeMovement.icon}</span>
             <div className="featured-texts">
-              <strong className="featured-name">{activeMovement.desc}</strong>
-              <span className="featured-desc">{activeMovement.name}</span>
+              <strong className="featured-name">{activeMovement.name}</strong>
+              <p className="featured-desc">{activeMovement.description}</p>
+              <span className="featured-type-pill">{activeMovement.type}</span>
             </div>
+          </div>
+
+          {/* 걷기 특화 안내 또는 영상 버튼 */}
+          {activeMovement.id === 'walk-light' ? (
+            <div className="walking-direct-box">
+              <span className="walking-prompt-emoji">🚶</span>
+              <div className="walking-prompt-texts">
+                <strong className="walking-title">가볍게 걷기</strong>
+                <p className="walking-prompt-text">
+                  “휴대폰은 잠시 내려놓고 운동장이나 복도를 가볍게 걸어볼까요?”
+                </p>
+                <div className="walking-specs-row">
+                  <span className="walking-recom-tag">권장시간 10분</span>
+                  <button
+                    type="button"
+                    className="btn-walking-quick-set"
+                    onClick={() => {
+                      setDurationPreset(10);
+                      setCustomMinutes('10');
+                    }}
+                  >
+                    10분 움직이기
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            activeMovement.youtubeUrl && (
+              <div className="movement-video-cta-row">
+                <button
+                  type="button"
+                  className="btn-watch-video"
+                  onClick={() => setShowVideoModal(true)}
+                  id="btn-open-movement-video"
+                >
+                  <Play size={15} fill="currentColor" />
+                  <span>따라하기 영상 보기</span>
+                </button>
+                {activeMovement.videoSource && (
+                  <span className="video-source-caption">
+                    영상 출처: {activeMovement.videoSource}
+                  </span>
+                )}
+              </div>
+            )
+          )}
+
+          {/* [다른 움직임 보기 >] 바텀시트 열기 버튼 */}
+          <div className="other-movements-action-row">
+            <button
+              type="button"
+              className="btn-open-other-movements"
+              onClick={() => setShowOtherMovementsSheet(true)}
+              id="btn-open-other-movements"
+            >
+              <span>다른 움직임 보기</span>
+              <ChevronRight size={16} />
+            </button>
           </div>
         </div>
 
-        {/* 4-2. [다른 움직임 보기 ▼] 아코디언 토글 */}
-        <div className="other-movements-toggle-wrap">
-          <button
-            type="button"
-            className="btn-toggle-other-movements"
-            onClick={() => setShowOtherMovements(!showOtherMovements)}
-            aria-expanded={showOtherMovements}
-          >
-            <span>{showOtherMovements ? '다른 움직임 접기' : '다른 움직임 보기'}</span>
-            {showOtherMovements ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-          </button>
-
-          {showOtherMovements && (
-            <div className="other-movements-list animate-fade-in-up">
-              {MOVEMENT_OPTIONS.map((mov) => {
-                const isSelected = mov.id === selectedMovementId;
-                return (
-                  <div
-                    key={mov.id}
-                    className={`movement-choice-card ${isSelected ? 'active' : ''}`}
-                    onClick={() => {
-                      setSelectedMovementId(mov.id);
-                      if (durationPreset !== 'custom') {
-                        setDurationPreset(mov.defaultMinutes);
-                      }
-                    }}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <div className="movement-choice-left">
-                      <span className="choice-icon">{mov.icon}</span>
-                      <div className="choice-texts">
-                        <strong className="choice-title">{mov.name}</strong>
-                        <span className="choice-desc">{mov.desc}</span>
-                      </div>
-                    </div>
-                    <div className={`choice-radio ${isSelected ? 'selected' : ''}`}>
-                      {isSelected && <Check size={13} strokeWidth={3} />}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* 4-3. 실제 움직인 시간 기록 */}
+        {/* 4-2. 실제 움직인 시간 기록 */}
         <div className="movement-duration-box">
           <label className="duration-question-label">
             <span>오늘 얼마나 움직였나요?</span>
@@ -695,7 +690,7 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
                 min={1}
                 max={180}
                 className="custom-duration-input"
-                placeholder="예: 20"
+                placeholder="예: 10"
                 value={customMinutes}
                 onChange={(e) => setCustomMinutes(e.target.value)}
               />
@@ -709,19 +704,26 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
             <div className="summary-content">
               <span className="summary-icon">{activeMovement.icon}</span>
               <strong className="summary-name">{activeMovement.name}</strong>
-              <span className="summary-time">· {effectiveMinutes}분</span>
+              <span className="summary-time">
+                · {effectiveMinutes}분 {dailyRecord.activity ? '완료 ✓' : '실천 예정'}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* 4-4. 실천 완료 버튼 (+1 Seed 양방향 연동 & 중복 방지) */}
+        {/* 4-3. 실천 완료 버튼 (+1 Seed 양방향 연동 & 중복 방지) */}
         <div className="movement-action-container">
           {dailyRecord.activity ? (
             <div className="movement-done-badge-card animate-pop-in">
               <CheckCircle2 size={22} className="done-check-icon" />
               <div className="done-banner-texts">
-                <strong>오늘의 움직임 실천 완료! 👏</strong>
-                <span>오늘 이미 몸 움직이기 습관(+1 Seed)을 받았습니다.</span>
+                <strong>
+                  오늘의 움직임 실천 완료! 👏
+                </strong>
+                <span className="done-sub-desc">
+                  {dailyRecord.movementRecord?.activityName || activeMovement.name}{' '}
+                  {dailyRecord.movementRecord?.durationMinutes || effectiveMinutes}분 실천 완료 · 몸 움직이기 습관(+1 Seed) 완료
+                </span>
               </div>
             </div>
           ) : (
@@ -729,14 +731,15 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
               type="button"
               className="btn-complete-movement animate-pop-in"
               onClick={handleCompleteMovement}
+              id="btn-complete-movement"
             >
-              <Activity size={18} />
-              <span>실천 완료 +1 Seed</span>
+              <Check size={18} />
+              <span>실천 완료 (+1 Seed)</span>
             </button>
           )}
         </div>
 
-        {/* 7. 건강한 일상 습관 철학 배너 (칼로리 상쇄 금지 메시지) */}
+        {/* 칼로리 상쇄 금지 건강철학 배너 */}
         <div className="movement-philosophy-banner">
           <strong className="philosophy-quote">
             “잘 먹고, 즐겁게 움직이고, 건강한 습관을 키워요 🌱”
@@ -796,6 +799,162 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
               >
                 <ImageIcon size={18} />
                 <span>🖼️ 앨범에서 선택</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================== */}
+      {/* 5개 기본 활동 선택 Bottom Sheet Modal */}
+      {/* ================================================== */}
+      {showOtherMovementsSheet && (
+        <div
+          className="movement-sheet-overlay animate-fade-in"
+          onClick={() => setShowOtherMovementsSheet(false)}
+        >
+          <div
+            className="movement-sheet-modal animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="sheet-handle-bar" />
+
+            <div className="sheet-header">
+              <div className="sheet-title-wrap">
+                <h3 className="sheet-title">오늘은 어떻게 움직여볼까요? 🌱</h3>
+                <span className="sheet-subtitle">내가 실천하고 싶은 활동을 선택해보세요.</span>
+              </div>
+              <button
+                type="button"
+                className="btn-close-sheet"
+                onClick={() => setShowOtherMovementsSheet(false)}
+                aria-label="닫기"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="movement-sheet-list">
+              {movementActivities.map((act) => {
+                const isSelected = act.id === selectedMovementId;
+                return (
+                  <div
+                    key={act.id}
+                    className={`movement-sheet-card ${isSelected ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedMovementId(act.id);
+                      if (durationPreset !== 'custom') {
+                        setDurationPreset(act.durationMinutes);
+                        setCustomMinutes(String(act.durationMinutes));
+                      }
+                      setShowOtherMovementsSheet(false);
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <span className="sheet-card-icon">{act.icon}</span>
+                    <div className="sheet-card-texts">
+                      <div className="sheet-card-title-row">
+                        <strong className="sheet-card-name">{act.name}</strong>
+                        {act.isFeatured && (
+                          <span className="sheet-featured-tag">추천</span>
+                        )}
+                      </div>
+                      <span className="sheet-card-specs">
+                        {act.durationText || `${act.durationMinutes}분`} · {act.location}
+                      </span>
+                      <p className="sheet-card-desc">{act.description}</p>
+                    </div>
+                    <div className={`sheet-card-radio ${isSelected ? 'selected' : ''}`}>
+                      {isSelected && <Check size={14} strokeWidth={3} />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="sheet-bottom-action">
+              <button
+                type="button"
+                className="btn-sheet-close"
+                onClick={() => setShowOtherMovementsSheet(false)}
+              >
+                <span>닫기</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================== */}
+      {/* 따라하기 YouTube 영상 Modal */}
+      {/* ================================================== */}
+      {showVideoModal && activeMovement.youtubeUrl && (
+        <div
+          className="video-modal-overlay animate-fade-in"
+          onClick={() => setShowVideoModal(false)}
+        >
+          <div
+            className="video-modal-dialog animate-pop-in"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="video-modal-header">
+              <div className="video-header-titles">
+                <span className="video-header-icon">{activeMovement.icon}</span>
+                <div>
+                  <h3 className="video-modal-title">{activeMovement.name} 따라하기</h3>
+                  <span className="video-modal-sub">
+                    {activeMovement.durationText || `${activeMovement.durationMinutes}분`} · {activeMovement.location}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-close-modal"
+                onClick={() => setShowVideoModal(false)}
+                aria-label="닫기"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="video-modal-player-wrap">
+              <div className="iframe-responsive-wrapper">
+                <iframe
+                  src={getYouTubeEmbedUrl(activeMovement.youtubeUrl) || ''}
+                  title={`${activeMovement.name} 영상`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+
+            <div className="video-modal-notice-box">
+              <p className="video-notice-text">
+                💡 영상을 보며 편안하게 동작을 따라해보세요.
+              </p>
+              {activeMovement.videoSource && (
+                <span className="video-source-text">
+                  영상 출처: {activeMovement.videoSource}
+                </span>
+              )}
+              <span className="video-no-auto-seed-note">
+                * 영상 시청 후 직접 몸을 움직이고 [실천 완료]를 눌렀을 때 +1 Seed가 지급됩니다.
+              </span>
+            </div>
+
+            <div className="video-modal-actions">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setShowVideoModal(false)}
+              >
+                영상 닫기
               </button>
             </div>
           </div>

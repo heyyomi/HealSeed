@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   BarChart3,
   Trophy,
+  Activity,
   Settings,
   LogOut
 } from 'lucide-react';
@@ -13,6 +14,7 @@ import { getChallenges } from '../../services/challengeService';
 import { AdminDashboardScreen } from './AdminDashboardScreen';
 import { AdminParticipationScreen } from './AdminParticipationScreen';
 import { AdminChallengeScreen } from './AdminChallengeScreen';
+import { AdminMovementScreen } from './AdminMovementScreen';
 import { AdminSettingsScreen } from './AdminSettingsScreen';
 import './AdminLayout.css';
 
@@ -82,6 +84,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ data, onSwitchRole }) 
           />
         )}
 
+        {activeTab === 'movements' && (
+          <AdminMovementScreen schoolName={data.schoolName || '숭곡중학교'} />
+        )}
+
         {activeTab === 'settings' && (
           <AdminSettingsScreen
             schoolName={data.schoolName || '숭곡중학교'}
@@ -90,7 +96,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ data, onSwitchRole }) 
         )}
       </main>
 
-      {/* 10. 관리자 Dashboard 4개 메뉴 하단 네비게이션 */}
+      {/* 관리자 Dashboard 5개 메뉴 하단 네비게이션 */}
       <nav className="admin-bottom-nav" role="navigation" aria-label="관리자 내비게이션">
         <button
           type="button"
@@ -98,7 +104,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ data, onSwitchRole }) 
           onClick={() => setActiveTab('dashboard')}
           id="admin-tab-dashboard"
         >
-          <LayoutDashboard size={20} />
+          <LayoutDashboard size={19} />
           <span>대시보드</span>
         </button>
 
@@ -108,7 +114,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ data, onSwitchRole }) 
           onClick={() => setActiveTab('participation')}
           id="admin-tab-participation"
         >
-          <BarChart3 size={20} />
+          <BarChart3 size={19} />
           <span>참여현황</span>
         </button>
 
@@ -118,8 +124,18 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ data, onSwitchRole }) 
           onClick={() => setActiveTab('challenges')}
           id="admin-tab-challenges"
         >
-          <Trophy size={20} />
+          <Trophy size={19} />
           <span>챌린지</span>
+        </button>
+
+        <button
+          type="button"
+          className={`admin-nav-item ${activeTab === 'movements' ? 'active' : ''}`}
+          onClick={() => setActiveTab('movements')}
+          id="admin-tab-movements"
+        >
+          <Activity size={19} />
+          <span>움직임 관리</span>
         </button>
 
         <button
@@ -128,7 +144,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ data, onSwitchRole }) 
           onClick={() => setActiveTab('settings')}
           id="admin-tab-settings"
         >
-          <Settings size={20} />
+          <Settings size={19} />
           <span>설정</span>
         </button>
       </nav>
