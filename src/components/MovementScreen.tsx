@@ -3,6 +3,7 @@ import { Activity, CheckCircle2, ChevronLeft, ChevronRight, PlayCircle } from 'l
 import type { DailyRecord } from '../types/onboarding';
 import { getActiveMovementActivities, getFeaturedMovement, getYouTubeEmbedUrl } from '../services/movementService';
 import './LifestyleTabs.css';
+import './LifestyleTabsPolish.css';
 
 interface MovementScreenProps {
   date: string;
@@ -30,8 +31,8 @@ export const MovementScreen: React.FC<MovementScreenProps> = ({ date, dailyRecor
   });
 
   return (
-    <main className="lifestyle-screen">
-      <header className="lifestyle-header"><span className="lifestyle-kicker">작게 시작하는 건강한 움직임</span><h2>운동</h2><p>오늘 할 움직임을 고르고, 실천 시간을 기록해요.</p></header>
+    <main className="lifestyle-screen movement-lifestyle-screen animate-fade-in-up">
+      <header className="lifestyle-header movement-theme"><div className="lifestyle-badge"><Activity size={14} /><span>작게 시작하는 건강한 움직임</span></div><h2>운동</h2><p>오늘 할 움직임을 고르고, 실천 시간을 기록해요.</p></header>
       <div className="lifestyle-date-nav">
         <button type="button" onClick={() => onShiftDate(-1)} aria-label="이전 날짜"><ChevronLeft /></button><strong>{dateLabel(date)}</strong><button type="button" onClick={() => onShiftDate(1)} aria-label="다음 날짜"><ChevronRight /></button>
       </div>
@@ -40,15 +41,15 @@ export const MovementScreen: React.FC<MovementScreenProps> = ({ date, dailyRecor
         <section className="movement-complete-banner"><CheckCircle2 /><div><strong>오늘의 움직임 완료</strong><span>{dailyRecord.movementRecord.activityName} · {dailyRecord.movementRecord.durationMinutes}분</span></div></section>
       )}
 
-      <section className="lifestyle-card">
-        <div className="lifestyle-card-title"><Activity size={19} /><h3>오늘의 추천 움직임</h3></div>
+      <section className="lifestyle-card lifestyle-feature-card">
+        <div className="lifestyle-section-head"><div className="lifestyle-card-title"><span className="lifestyle-icon-box"><Activity size={18} /></span><h3>오늘의 추천 움직임</h3></div><span className="lifestyle-status-pill">추천</span></div>
         <div className="movement-choice-list">
           {activities.map((item) => <button key={item.id} className={selectedId === item.id ? 'selected' : ''} onClick={() => { setSelectedId(item.id); setDuration(item.durationMinutes); }}><span>{item.icon}</span><div><strong>{item.name}</strong><small>{item.location} · {item.durationText || `${item.durationMinutes}분`}</small></div></button>)}
         </div>
       </section>
 
       <section className="lifestyle-card movement-action-card">
-        <h3>{selected.name}</h3><p>{selected.description}</p>
+        <div className="lifestyle-section-head"><h3>{selected.name}</h3><span className="lifestyle-status-pill neutral">{selected.location}</span></div><p>{selected.description}</p>
         <div className="duration-options">{[5, 10, 15].map((minutes) => <button key={minutes} className={duration === minutes ? 'selected' : ''} onClick={() => setDuration(minutes)}>{minutes}분</button>)}</div>
         {embedUrl && <a className="video-action" href={selected.youtubeUrl} target="_blank" rel="noreferrer"><PlayCircle size={18} /> 동작 영상 보기</a>}
         <button type="button" className="primary-action" onClick={() => onSave({ date, activityId: selected.id, activityName: selected.name, durationMinutes: duration })}>{dailyRecord.activity ? '움직임 기록 업데이트' : '오늘 실천했어요 +1 Seed'}</button>

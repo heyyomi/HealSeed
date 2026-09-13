@@ -3,6 +3,7 @@ import { Camera, CheckCircle2, ChevronLeft, ChevronRight, Utensils } from 'lucid
 import type { DailyRecord, MealData, MealRecord } from '../types/onboarding';
 import { compressAndConvertToBase64 } from '../services/photoService';
 import './LifestyleTabs.css';
+import './LifestyleTabsPolish.css';
 
 interface MealScreenProps {
   date: string;
@@ -42,9 +43,9 @@ export const MealScreen: React.FC<MealScreenProps> = ({
   };
 
   return (
-    <main className="lifestyle-screen">
-      <header className="lifestyle-header">
-        <span className="lifestyle-kicker">오늘의 식사 생활</span>
+    <main className="lifestyle-screen meal-lifestyle-screen animate-fade-in-up">
+      <header className="lifestyle-header meal-theme">
+        <div className="lifestyle-badge"><Utensils size={14} /><span>오늘의 식사 생활</span></div>
         <h2>급식</h2>
         <p>급식을 확인하고, 내 식사 습관과 한 끼를 기록해요.</p>
       </header>
@@ -55,8 +56,8 @@ export const MealScreen: React.FC<MealScreenProps> = ({
         <button type="button" onClick={() => onShiftDate(1)} aria-label="다음 날짜"><ChevronRight /></button>
       </div>
 
-      <section className="lifestyle-card meal-menu-card">
-        <div className="lifestyle-card-title"><Utensils size={19} /><h3>오늘의 급식</h3></div>
+      <section className="lifestyle-card lifestyle-feature-card meal-menu-card">
+        <div className="lifestyle-section-head"><div className="lifestyle-card-title"><span className="lifestyle-icon-box"><Utensils size={18} /></span><h3>오늘의 급식</h3></div><span className="lifestyle-status-pill">{meal?.isNoMealDay ? '급식 없음' : '학교 급식'}</span></div>
         <span className="school-label">{meal?.schoolName || '학교 급식'}</span>
         {meal?.isNoMealDay ? (
           <p className="empty-copy">{meal.noMealReason || '등록된 급식 정보가 없어요.'}</p>
@@ -69,7 +70,7 @@ export const MealScreen: React.FC<MealScreenProps> = ({
       </section>
 
       <section className="lifestyle-card">
-        <div className="lifestyle-card-title"><CheckCircle2 size={19} /><h3>식사 습관</h3></div>
+        <div className="lifestyle-section-head"><div className="lifestyle-card-title"><span className="lifestyle-icon-box"><CheckCircle2 size={18} /></span><h3>식사 습관</h3></div><span className="lifestyle-status-pill neutral">{Number(dailyRecord.balancedMeal) + Number(dailyRecord.slowEating) + Number(dailyRecord.listenToBody)}/3 실천</span></div>
         <div className="meal-habit-list">
           <button className={dailyRecord.balancedMeal ? 'done' : ''} onClick={() => onToggleHabit('balancedMeal', true)}>
             <span>🥗 골고루 먹기</span><b>{dailyRecord.balancedMeal ? '완료' : '+1 Seed'}</b>
@@ -84,7 +85,7 @@ export const MealScreen: React.FC<MealScreenProps> = ({
       </section>
 
       <section className="lifestyle-card">
-        <div className="lifestyle-card-title"><Camera size={19} /><h3>나의 한 끼 기록</h3></div>
+        <div className="lifestyle-section-head"><div className="lifestyle-card-title"><span className="lifestyle-icon-box"><Camera size={18} /></span><h3>나의 한 끼 기록</h3></div><span className="lifestyle-status-pill neutral">{imageUrl ? '사진 선택됨' : '미기록'}</span></div>
         <input ref={inputRef} type="file" accept="image/*" capture="environment" hidden onChange={handlePhoto} />
         {imageUrl ? <img className="meal-photo-preview" src={imageUrl} alt="기록한 한 끼" /> : <div className="meal-photo-empty">사진이 아직 없어요</div>}
         <button type="button" className="secondary-action" onClick={() => inputRef.current?.click()}><Camera size={16} /> 사진 선택</button>
