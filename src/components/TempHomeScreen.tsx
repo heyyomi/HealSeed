@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   PartyPopper,
-  Info
+  Info,
+  Target
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { OnboardingState, DailyRecord, MealData, SchoolType } from '../types/onboarding';
@@ -25,6 +26,7 @@ import { getMealBySchoolAndDate } from '../services/mealService';
 import { TodayMealCard } from './TodayMealCard';
 import { MealDetailScreen } from './MealDetailScreen';
 import { RecordScreen } from './RecordScreen';
+import { TogetherScreen } from './TogetherScreen';
 import { MyScreen } from './MyScreen';
 import './TempHomeScreen.css';
 
@@ -236,6 +238,79 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     return `${m}월 ${d}일 ${dayOfWeek}요일`;
   };
 
+  // Calculate Monday to Sunday stats of current week
+  const getWeekDayStats = (currDateStr: string, records: Record<string, DailyRecord>) => {
+    const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
+    const curr = new Date(currDateStr);
+    const day = curr.getDay(); // 0 is Sunday, 1 is Monday...
+    const diffToMon = day === 0 ? -6 : 1 - day;
+    const mon = new Date(curr);
+    mon.setDate(curr.getDate() + diffToMon);
+
+    return dayNames.map((dName, idx) => {
+      const d = new Date(mon);
+      d.setDate(mon.getDate() + idx);
+      const dateStr = getFormattedDate(d);
+      const rec = records[dateStr];
+      const seedCount = rec
+        ? (rec.balancedMeal ? 1 : 0) +
+          (rec.water ? 1 : 0) +
+          (rec.activity ? 1 : 0) +
+          (rec.mindCare ? 1 : 0)
+        : 0;
+
+      return {
+        dayName: dName,
+        dateStr,
+        isCurrent: dateStr === currDateStr,
+        seedCount,
+        shortLabel: `${d.getMonth() + 1}/${d.getDate()}`,
+      };
+    });
+  };
+
+  const weekDayStats = getWeekDayStats(currentDateString, data.dailyRecords);
+  const weeklyEarnedSeed = weekDayStats.reduce((sum, item) => sum + item.seedCount, 0);
+  const targetSeed = data.weeklyGoal?.targetSeed || 15;
+  const weeklyGoalPercent = Math.min(100, Math.round((weeklyEarnedSeed / targetSeed) * 100));
+
+  // Save meal photo and memo (Section 12)
+  const handleSaveMealRecord = (record: { mealImageUrl: string; mealMemo: string }) => {
+    onUpdateState((prev) => ({
+      ...prev,
+      mealRecords: {
+        ...prev.mealRecords,
+        [currentDateString]: {
+          date: currentDateString,
+          mealImageUrl: record.mealImageUrl,
+          mealMemo: record.mealMemo,
+          createdAt: new Date().toISOString(),
+        },
+      },
+    }));
+    setToastMessage({
+      title: '급식판 기록 완료 📸',
+      subtitle: '나만의 건강한 한 끼 아카이브에 안전하게 보관되었어요.',
+    });
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  // Update weekly goal target (1순위)
+  const handleUpdateWeeklyGoal = (newTargetSeed: number) => {
+    onUpdateState((prev) => ({
+      ...prev,
+      weeklyGoal: {
+        ...prev.weeklyGoal,
+        targetSeed: newTargetSeed,
+      },
+    }));
+    setToastMessage({
+      title: '주간 목표 변경 🎯',
+      subtitle: `이번 주 목표가 ${newTargetSeed} Seed로 설정되었습니다.`,
+    });
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
   // If Meal Detail view is open, render MealDetailScreen
   if (isDetailOpen && currentMeal) {
     return (
@@ -243,8 +318,10 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
         meal={currentMeal}
         formattedDateLabel={getFormattedDateLabel(currentDateString)}
         dailyRecord={todayRecord}
+        mealRecord={data.mealRecords[currentDateString]}
         onBack={() => setIsDetailOpen(false)}
         onToggleHabit={handleToggleHabit}
+        onSaveMealRecord={handleSaveMealRecord}
       />
     );
   }
@@ -380,6 +457,65 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                   />
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* ================================================== */}
+          {/* 1순위: 나의 주간 건강목표 위젯 (Weekly Goal Widget) */}
+          {/* ================================================== */}
+          <section className="weekly-goal-card animate-pop-in">
+            <div className="goal-card-top-row">
+              <div className="goal-title-group">
+                <div className="goal-icon-badge">
+                  <Target size={16} />
+                </div>
+                <div>
+                  <span className="goal-badge-label">나의 주간 건강목표</span>
+                  <h4 className="goal-heading-text">{data.weeklyGoal?.title || `이번 주 ${targetSeed} Seed 심기 🌱`}</h4>
+                </div>
+              </div>
+              <div className="goal-score-pill">
+                <strong>{weeklyEarnedSeed}</strong>
+                <span>/ {targetSeed} Seed</span>
+              </div>
+            </div>
+
+            <div className="goal-track-wrap">
+              <div className="goal-track-bar">
+                <div
+                  className="goal-track-fill"
+                  style={{ width: `${weeklyGoalPercent}%` }}
+                />
+              </div>
+              <div className="goal-track-info">
+                <span className="goal-encourage-msg">
+                  {weeklyGoalPercent >= 100
+                    ? '🎉 이번 주 목표 달성 완료! 메이트가 쑥쑥 자라요!'
+                    : `목표 달성까지 앞으로 ${Math.max(0, targetSeed - weeklyEarnedSeed)} Seed 남았어요! 🌱`}
+                </span>
+                <span className="goal-track-percent">{weeklyGoalPercent}%</span>
+              </div>
+            </div>
+
+            {/* 7-Day Dot Progress (Mon~Sun) */}
+            <div className="weekly-dots-container">
+              {weekDayStats.map((item) => (
+                <div
+                  key={item.dateStr}
+                  className={`week-dot-col ${item.isCurrent ? 'current' : ''} ${item.seedCount > 0 ? 'achieved' : ''}`}
+                  onClick={() => setCurrentDateString(item.dateStr)}
+                  title={`${item.shortLabel} (${item.dayName}): ${item.seedCount} Seed`}
+                >
+                  <span className="week-dot-day">{item.dayName}</span>
+                  <div className="week-dot-circle">
+                    {item.seedCount > 0 ? (
+                      <span className="dot-seed-num">+{item.seedCount}</span>
+                    ) : (
+                      <span className="dot-empty" />
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -605,44 +741,22 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
           currentDateString={currentDateString}
           dailyRecords={data.dailyRecords}
           mealsByDate={mealsArchive}
+          mealRecords={data.mealRecords}
+          schoolName={data.schoolName}
         />
       )}
 
-      {/* TOGETHER TAB */}
+      {/* TOGETHER TAB (2순위) */}
       {activeTab === 'together' && (
-        <div className="screen-container animate-fade-in-up" style={{ padding: '24px 20px' }}>
-          <div className="record-header">
-            <div className="record-badge" style={{ backgroundColor: '#DCFCE7', color: '#15803D' }}>
-              <Users size={14} />
-              <span>친구와 함께</span>
-            </div>
-            <h2 className="record-title">함께하기</h2>
-            <p className="record-subtitle">우리 반, 우리 학교 친구들과 건강한 한 끼 습관을 나눠요.</p>
-          </div>
-          <div className="together-card-placeholder" style={{
-            marginTop: '20px',
-            backgroundColor: '#FFFFFF',
-            border: '2px dashed #CBD5E1',
-            borderRadius: '24px',
-            padding: '36px 20px',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '42px', marginBottom: '12px' }}>🤝🌱</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B', marginBottom: '6px' }}>
-              학교 그룹 챌린지 준비 중
-            </h3>
-            <p style={{ fontSize: '13px', color: '#64748B', lineHeight: '1.5' }}>
-              {data.schoolName} 친구들과 함께 급식을 맛있게 먹고 작은 건강습관을 함께 키워갈 그룹 기능이 곧 열려요!
-            </p>
-          </div>
-        </div>
+        <TogetherScreen data={data} />
       )}
 
-      {/* MY TAB */}
+      {/* MY TAB (3순위) */}
       {activeTab === 'my' && (
         <MyScreen
           data={data}
           onUpdateSchool={handleUpdateSchool}
+          onUpdateWeeklyGoal={handleUpdateWeeklyGoal}
           onResetAll={onReset}
         />
       )}

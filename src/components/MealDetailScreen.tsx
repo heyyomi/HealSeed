@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   ChevronLeft,
   UtensilsCrossed,
@@ -9,29 +9,69 @@ import {
   Droplets,
   Clock,
   Apple,
-  ShieldCheck
+  ShieldCheck,
+  Camera,
+  Image as ImageIcon,
+  Check,
+  RotateCcw,
+  Lock,
+  Activity,
+  Smile
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import type { MealData, DailyRecord } from '../types/onboarding';
+import type { MealData, DailyRecord, MealRecord } from '../types/onboarding';
 import { getMenuIcon, isWeekend } from '../services/mealService';
+import { compressAndConvertToBase64 } from '../services/photoService';
 import './MealDetailScreen.css';
 
 interface MealDetailScreenProps {
   meal: MealData;
   formattedDateLabel: string;
   dailyRecord: DailyRecord;
+  mealRecord?: MealRecord;
   onBack: () => void;
   onToggleHabit: (key: keyof DailyRecord, isPrimarySeedHabit: boolean) => void;
+  onSaveMealRecord?: (record: { mealImageUrl: string; mealMemo: string }) => void;
 }
+
+const MEMO_PRESETS = [
+  '새로운 반찬도 먹어봤어요. 🥢',
+  '천천히 먹으려고 노력했어요. ⏳',
+  '오늘은 물도 함께 마셨어요. 💧',
+  '내 몸의 기분 좋은 배부름을 느꼈어요. 🥗',
+];
+
+const RECOMMENDED_MOVEMENTS = [
+  { id: 'walk', icon: '🚶', title: '식사 후 10분 가볍게 걷기', desc: '소화를 돕고 나른함을 깨우는 기분 좋은 발걸음' },
+  { id: 'stretch', icon: '🧘', title: '5분 스트레칭하기', desc: '목과 어깨, 허리를 시원하게 펴주는 편안한 스트레칭' },
+  { id: 'stairs', icon: '🪜', title: '가까운 층은 계단 이용하기', desc: '엘리베이터 대신 한두 층 계단으로 튼튼하게 오르기' },
+  { id: 'break-walk', icon: '🌳', title: '쉬는 시간에 잠깐 걸어보기', desc: '친구와 함께 복도나 운동장을 여유롭게 거닐기' },
+  { id: 'fun-move', icon: '🏃', title: '오늘 10분 즐겁게 움직여보기', desc: '신나는 음악에 맞춰 가볍게 몸을 흔들고 활력 충전' },
+];
 
 export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
   meal,
   formattedDateLabel,
   dailyRecord,
+  mealRecord,
   onBack,
   onToggleHabit,
+  onSaveMealRecord,
 }) => {
   const isNoMeal = meal.isNoMealDay || isWeekend(meal.date);
+
+  // Photo state
+  const [photoDataUrl, setPhotoDataUrl] = useState<string>(mealRecord?.mealImageUrl || '');
+  const [memo, setMemo] = useState<string>(mealRecord?.mealMemo || '');
+  const [isPhotoSaved, setIsPhotoSaved] = useState<boolean>(!!mealRecord?.mealImageUrl);
+  const [isCompressing, setIsCompressing] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Movement selection
+  const [selectedMovementId, setSelectedMovementId] = useState<string>('walk');
+
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const albumInputRef = useRef<HTMLInputElement>(null);
 
   const handleHabitClick = (key: keyof DailyRecord, isPrimarySeedHabit: boolean) => {
     const willBeDone = !dailyRecord[key];
@@ -51,8 +91,91 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+
+    setIsCompressing(true);
+    setErrorMessage(null);
+
+    try {
+      const base64 = await compressAndConvertToBase64(file);
+      setPhotoDataUrl(base64);
+      setIsPhotoSaved(false);
+    } catch (err: any) {
+      setErrorMessage(err?.message || '사진을 읽어오는데 실패했습니다.');
+    } finally {
+      setIsCompressing(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleSaveMealPhoto = () => {
+    if (!photoDataUrl) return;
+    onSaveMealRecord?.({
+      mealImageUrl: photoDataUrl,
+      mealMemo: memo.trim(),
+    });
+    setIsPhotoSaved(true);
+    try {
+      confetti({
+        particleCount: 45,
+        spread: 60,
+        origin: { y: 0.65 },
+        colors: ['#22C55E', '#38BDF8', '#FACC15'],
+      });
+    } catch {}
+  };
+
+  const handleResetPhoto = () => {
+    setPhotoDataUrl('');
+    setMemo('');
+    setIsPhotoSaved(false);
+    onSaveMealRecord?.({
+      mealImageUrl: '',
+      mealMemo: '',
+    });
+  };
+
+  const handleSelectPresetMemo = (preset: string) => {
+    if (memo.includes(preset)) return;
+    setMemo((prev) => (prev ? `${prev} ${preset}` : preset));
+  };
+
+  const handleCompleteMovement = () => {
+    if (!dailyRecord.activity) {
+      onToggleHabit('activity', true);
+      try {
+        confetti({
+          particleCount: 40,
+          spread: 55,
+          origin: { y: 0.75 },
+          colors: ['#22C55E', '#38BDF8', '#FACC15'],
+        });
+      } catch {}
+    }
+  };
+
   return (
     <div className="meal-detail-screen screen-container">
+      {/* Hidden File Inputs */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+      <input
+        ref={albumInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+
       {/* Header */}
       <div className="screen-header">
         <button className="back-btn" onClick={onBack} aria-label="이전 화면으로 돌아가기">
@@ -104,7 +227,7 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
             <ul className="notice-list">
               <li>학교 급식이 없어도 규칙적인 식사 시간을 지켜보세요.</li>
               <li>좋아하는 음식과 함께 신선한 채소와 물도 골고루 챙겨보세요.</li>
-              <li>아래에서 오늘의 건강한 한 끼 습관을 실천하고 Seed를 모아보세요!</li>
+              <li>아래에서 오늘의 건강한 한 끼 기록과 움직임을 실천해보세요!</li>
             </ul>
           </div>
         </div>
@@ -167,7 +290,162 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
         </>
       )}
 
+      {/* ================================================== */}
+      {/* 12. 오늘의 한 끼 기록 📸 (Meal Photo Section) */}
+      {/* ================================================== */}
+      <section className="meal-photo-record-section animate-fade-in-up">
+        <div className="section-title-row">
+          <div className="section-title-wrap">
+            <span className="photo-section-emoji">📸</span>
+            <h3 className="section-title">오늘의 한 끼 기록</h3>
+          </div>
+          <span className="private-secure-pill">
+            <Lock size={12} />
+            <span>나만의 비공개 기록</span>
+          </span>
+        </div>
+        <p className="habits-section-desc">
+          식사량이나 칼로리 평가 대신, 오늘 내가 마주한 건강하고 즐거운 한 끼를 담아보세요.
+        </p>
+
+        {/* Error message */}
+        {errorMessage && (
+          <div className="photo-error-alert animate-pop-in">
+            <AlertCircle size={15} />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {/* Photo Container or Upload Buttons */}
+        {photoDataUrl ? (
+          <div className="meal-photo-preview-card animate-pop-in">
+            <div className="photo-img-wrapper">
+              <img src={photoDataUrl} alt="오늘의 급식판 사진" className="meal-preview-img" />
+              {isPhotoSaved && (
+                <div className="photo-saved-tag">
+                  <Check size={13} />
+                  <span>저장 완료</span>
+                </div>
+              )}
+            </div>
+
+            {/* Memo input section */}
+            <div className="meal-memo-box">
+              <label className="memo-label">
+                <Smile size={14} />
+                <span>나의 긍정 식사 메모 (선택사항)</span>
+              </label>
+
+              {/* Memo Presets */}
+              <div className="memo-presets-row">
+                {MEMO_PRESETS.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="memo-preset-chip"
+                    onClick={() => handleSelectPresetMemo(preset)}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                className="meal-memo-input"
+                placeholder="“새로운 반찬도 먹어봤어요.” “천천히 즐겁게 먹었어요.”"
+                rows={2}
+                value={memo}
+                onChange={(e) => {
+                  setMemo(e.target.value);
+                  setIsPhotoSaved(false);
+                }}
+              />
+
+              <div className="photo-card-actions">
+                <button
+                  type="button"
+                  className={`btn-save-photo ${isPhotoSaved ? 'saved' : ''}`}
+                  onClick={handleSaveMealPhoto}
+                >
+                  <Check size={16} />
+                  <span>{isPhotoSaved ? '수정 내용 저장' : '급식판 기록 저장하기'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-retake-photo"
+                  onClick={() => cameraInputRef.current?.click()}
+                  title="사진 다시 찍기"
+                >
+                  <RotateCcw size={14} />
+                  <span>다시 촬영</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-remove-photo"
+                  onClick={handleResetPhoto}
+                  title="사진 삭제"
+                >
+                  <span>삭제</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="photo-upload-container">
+            <div className="photo-upload-placeholder">
+              <div className="upload-icon-circle">
+                <Camera size={28} />
+              </div>
+              <strong className="upload-placeholder-title">오늘의 급식판을 사진으로 남겨보세요</strong>
+              <p className="upload-placeholder-desc">
+                사진은 친구들이나 피드에 공개되지 않고, 오직 나의 건강 기록장에만 안전하게 보관됩니다.
+              </p>
+
+              <div className="photo-btn-group">
+                <button
+                  type="button"
+                  className="btn-camera-trigger"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={isCompressing}
+                >
+                  <Camera size={16} />
+                  <span>급식판 사진 찍기</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-album-trigger"
+                  onClick={() => albumInputRef.current?.click()}
+                  disabled={isCompressing}
+                >
+                  <ImageIcon size={16} />
+                  <span>앨범에서 선택</span>
+                </button>
+              </div>
+
+              {isCompressing && (
+                <div className="photo-compressing-text animate-pulse">
+                  <span>사진을 건강 기록용으로 최적화하는 중...</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Safety & Anti-Evaluation Banner */}
+        <div className="photo-philosophy-banner">
+          <ShieldCheck size={14} color="#16A34A" />
+          <span>
+            HealSeed는 식사량·칼로리·외모를 평가하지 않으며, 나만의 기분 좋은 식사 경험을 응원합니다.
+          </span>
+        </div>
+      </section>
+
+      {/* ================================================== */}
       {/* Today's Meal Habits Checklist Section */}
+      {/* ================================================== */}
       <div className="meal-habits-section animate-fade-in-up">
         <div className="section-title-row">
           <div className="section-title-wrap">
@@ -268,6 +546,81 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
           </div>
         </div>
       </div>
+
+      {/* ================================================== */}
+      {/* 14 & 15. 오늘의 움직임 추천 🏃 (Movement Section) */}
+      {/* ================================================== */}
+      <section className="movement-recommend-section animate-fade-in-up">
+        <div className="section-title-row">
+          <div className="section-title-wrap">
+            <span className="movement-section-emoji">🏃</span>
+            <h3 className="section-title">오늘도 기분 좋게 움직여볼까요?</h3>
+          </div>
+          <span className={`movement-sync-pill ${dailyRecord.activity ? 'done' : ''}`}>
+            {dailyRecord.activity ? '실천 완료됨 ✓' : '+1 Seed 연결'}
+          </span>
+        </div>
+        <p className="habits-section-desc">
+          식사 후 가볍게 움직이는 것은 기분과 소화를 돕는 건강한 생활습관이에요.
+        </p>
+
+        {/* Gentle Movement Suggestion Cards */}
+        <div className="movement-cards-list">
+          {RECOMMENDED_MOVEMENTS.map((mov) => {
+            const isSelected = selectedMovementId === mov.id;
+            return (
+              <div
+                key={mov.id}
+                className={`movement-card ${isSelected ? 'selected' : ''}`}
+                onClick={() => setSelectedMovementId(mov.id)}
+              >
+                <div className="movement-card-left">
+                  <span className="movement-card-icon">{mov.icon}</span>
+                  <div className="movement-card-texts">
+                    <strong className="movement-card-title">{mov.title}</strong>
+                    <span className="movement-card-desc">{mov.desc}</span>
+                  </div>
+                </div>
+                <div className={`movement-radio ${isSelected ? 'active' : ''}`}>
+                  <div className="movement-radio-inner" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Action Button: Dual-screen Activity Sync */}
+        <div className="movement-action-box">
+          {dailyRecord.activity ? (
+            <div className="movement-already-done-card animate-pop-in">
+              <CheckCircle2 size={22} className="done-icon" />
+              <div className="done-text-wrap">
+                <strong>오늘의 몸 움직이기 습관을 이미 완료했어요!</strong>
+                <span>홈 화면의 "몸 움직이기" 습관(+1 Seed)과 함께 연동되었습니다.</span>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn-complete-movement animate-pop-in"
+              onClick={handleCompleteMovement}
+            >
+              <Activity size={18} />
+              <span>선택한 움직임 오늘 실천하기 (+1 Seed)</span>
+            </button>
+          )}
+        </div>
+
+        {/* Section 15 Non-Compensatory / Health Advice Notice */}
+        <div className="movement-advice-banner">
+          <p className="advice-main-quote">
+            “식후 10분 산책은 가볍게 몸을 움직이는 좋은 습관이에요.” 🍃
+          </p>
+          <span className="advice-sub-text">
+            HealSeed는 칼로리를 운동으로 소모하거나 상쇄하지 않고, 활기찬 일상을 위한 기분 좋은 움직임을 제안합니다.
+          </span>
+        </div>
+      </section>
 
       {/* Bottom Complete / Back Button */}
       <div className="bottom-action-area">

@@ -1,6 +1,19 @@
-import React from 'react';
-import { CalendarDays, Sparkles, Check, X, UtensilsCrossed } from 'lucide-react';
-import type { DailyRecord, MealData } from '../types/onboarding';
+import React, { useState } from 'react';
+import {
+  CalendarDays,
+  Sparkles,
+  Check,
+  X,
+  UtensilsCrossed,
+  Camera,
+  X as CloseIcon,
+  ShieldCheck,
+  Heart,
+  Droplets,
+  Activity,
+  Award
+} from 'lucide-react';
+import type { DailyRecord, MealData, MealRecord } from '../types/onboarding';
 import { isWeekend } from '../services/mealService';
 import { getFormattedDate } from '../utils/seedRules';
 import './RecordScreen.css';
@@ -9,14 +22,19 @@ interface RecordScreenProps {
   currentDateString: string;
   dailyRecords: Record<string, DailyRecord>;
   mealsByDate: Record<string, MealData>;
+  mealRecords?: Record<string, MealRecord>;
+  schoolName?: string;
 }
 
 export const RecordScreen: React.FC<RecordScreenProps> = ({
   currentDateString,
   dailyRecords,
   mealsByDate,
+  mealRecords = {},
+  schoolName = '학교 급식',
 }) => {
   const realToday = getFormattedDate();
+  const [selectedArchiveDate, setSelectedArchiveDate] = useState<string | null>(null);
 
   // Generate list of dates to display (e.g. today and past 4 days)
   const displayDates: string[] = [];
@@ -37,6 +55,17 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
     const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][new Date(dateStr).getDay()];
     return `${m}월 ${d}일 (${dayOfWeek})`;
   };
+
+  // Selected date modal details
+  const selectedMealRecord = selectedArchiveDate ? mealRecords[selectedArchiveDate] : null;
+  const selectedDailyRecord = selectedArchiveDate ? dailyRecords[selectedArchiveDate] : null;
+  const selectedMeal = selectedArchiveDate ? mealsByDate[selectedArchiveDate] : null;
+  const selectedEarnedSeed = selectedDailyRecord
+    ? (selectedDailyRecord.balancedMeal ? 1 : 0) +
+      (selectedDailyRecord.water ? 1 : 0) +
+      (selectedDailyRecord.activity ? 1 : 0) +
+      (selectedDailyRecord.mindCare ? 1 : 0)
+    : 0;
 
   return (
     <div className="record-screen-container animate-fade-in-up">
@@ -66,6 +95,7 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
           };
 
           const meal = mealsByDate[dateStr];
+          const mealRec = mealRecords[dateStr];
           const isWeekendDay = isWeekend(dateStr);
           let mealPreview = '급식 정보 확인 중...';
 
@@ -99,6 +129,35 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
                 </div>
               </div>
 
+              {/* Photo Thumbnail Banner (Section 13) */}
+              {mealRec?.mealImageUrl && (
+                <div
+                  className="record-photo-thumb-banner"
+                  onClick={() => setSelectedArchiveDate(dateStr)}
+                  role="button"
+                  tabIndex={0}
+                  title="나의 한 끼 기록 상세 보기"
+                >
+                  <div className="thumb-img-box">
+                    <img
+                      src={mealRec.mealImageUrl}
+                      alt={`${dateStr} 급식판 사진`}
+                      className="record-thumb-img"
+                    />
+                    <span className="thumb-cam-tag">
+                      <Camera size={11} />
+                      <span>급식판 📸</span>
+                    </span>
+                  </div>
+                  <div className="thumb-info-wrap">
+                    <span className="thumb-info-title">나의 한 끼 기록 보기</span>
+                    <span className="thumb-info-memo">
+                      {mealRec.mealMemo || '소중한 한 끼가 기록되어 있어요.'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Meal Summary */}
               <div className="record-meal-box">
                 <div className="meal-box-label">
@@ -131,6 +190,124 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
           );
         })}
       </div>
+
+      {/* ================================================== */}
+      {/* 13. 나의 한 끼 기록 상세 모달 (Section 13 Modal) */}
+      {/* ================================================== */}
+      {selectedArchiveDate && selectedMealRecord && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setSelectedArchiveDate(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="meal-archive-modal animate-pop-in" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="archive-modal-header">
+              <div className="archive-modal-title-col">
+                <div className="archive-modal-badge-row">
+                  <span className="archive-modal-badge">📸 나의 한 끼 기록</span>
+                  <span className="archive-school-tag">{schoolName}</span>
+                </div>
+                <h3 className="archive-modal-date">{formatHeaderDate(selectedArchiveDate)}</h3>
+              </div>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setSelectedArchiveDate(null)}
+                aria-label="닫기"
+              >
+                <CloseIcon size={20} />
+              </button>
+            </div>
+
+            {/* Meal Photo */}
+            <div className="archive-photo-frame">
+              <img
+                src={selectedMealRecord.mealImageUrl}
+                alt={`${selectedArchiveDate} 급식판 사진`}
+                className="archive-full-photo"
+              />
+            </div>
+
+            {/* User Memo */}
+            {selectedMealRecord.mealMemo && (
+              <div className="archive-memo-card">
+                <span className="archive-memo-label">💬 나의 한 끼 메모</span>
+                <p className="archive-memo-text">"{selectedMealRecord.mealMemo}"</p>
+              </div>
+            )}
+
+            {/* NEIS Meal Menu on that date */}
+            <div className="archive-section-card">
+              <div className="archive-section-header">
+                <UtensilsCrossed size={15} />
+                <strong>그날의 NEIS 급식 식단</strong>
+              </div>
+              {selectedMeal && selectedMeal.menu && selectedMeal.menu.length > 0 ? (
+                <div className="archive-menu-chips">
+                  {selectedMeal.menu.map((dish, i) => (
+                    <span key={i} className="archive-dish-chip">
+                      {dish}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="archive-no-menu">급식 식단 정보가 없습니다.</p>
+              )}
+            </div>
+
+            {/* Habits and Seed Earned */}
+            <div className="archive-section-card">
+              <div className="archive-section-header">
+                <Award size={15} />
+                <strong>그날 실천한 건강습관 & 획득 Seed</strong>
+              </div>
+
+              <div className="archive-habits-row">
+                <div className={`archive-habit-pill ${selectedDailyRecord?.balancedMeal ? 'done' : ''}`}>
+                  <UtensilsCrossed size={12} />
+                  <span>골고루 먹기</span>
+                </div>
+                <div className={`archive-habit-pill ${selectedDailyRecord?.water ? 'done' : ''}`}>
+                  <Droplets size={12} />
+                  <span>물 마시기</span>
+                </div>
+                <div className={`archive-habit-pill ${selectedDailyRecord?.activity ? 'done' : ''}`}>
+                  <Activity size={12} />
+                  <span>몸 움직이기</span>
+                </div>
+                <div className={`archive-habit-pill ${selectedDailyRecord?.mindCare ? 'done' : ''}`}>
+                  <Heart size={12} />
+                  <span>마음 돌보기</span>
+                </div>
+              </div>
+
+              <div className="archive-seed-result-row">
+                <span>획득한 건강 포인트:</span>
+                <strong className="archive-seed-count">+{selectedEarnedSeed} Seed 🌱</strong>
+              </div>
+            </div>
+
+            {/* Privacy Safe Note */}
+            <div className="archive-privacy-note">
+              <ShieldCheck size={14} color="#16A34A" />
+              <span>이 기록은 본인만 열람 가능한 안전한 개인 아카이브입니다.</span>
+            </div>
+
+            {/* Modal Bottom Button */}
+            <div className="archive-modal-footer">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setSelectedArchiveDate(null)}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

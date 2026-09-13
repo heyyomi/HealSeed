@@ -23,6 +23,11 @@ const initialDefaultState: OnboardingState = {
   seed: 0,
   level: 1,
   dailyRecords: {},
+  mealRecords: {},
+  weeklyGoal: {
+    targetSeed: 15,
+    title: '이번 주 건강습관 15 Seed 심기 🌱',
+  },
 };
 
 export const App: React.FC = () => {
@@ -40,6 +45,11 @@ export const App: React.FC = () => {
           officeCode: parsed.officeCode || null,
           level,
           dailyRecords: parsed.dailyRecords || {},
+          mealRecords: parsed.mealRecords || {},
+          weeklyGoal: parsed.weeklyGoal || {
+            targetSeed: 15,
+            title: '이번 주 건강습관 15 Seed 심기 🌱',
+          },
         };
       }
     } catch {
@@ -93,6 +103,8 @@ export const App: React.FC = () => {
       seed: 0,
       level: 1,
       dailyRecords: {},
+      mealRecords: {},
+      weeklyGoal: prev.weeklyGoal || initialDefaultState.weeklyGoal,
     }));
   };
 

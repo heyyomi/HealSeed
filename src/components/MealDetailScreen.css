@@ -421,3 +421,544 @@
 .habit-check-circle.active {
   color: var(--primary-500);
 }
+
+/* ========================================= */
+/* 12. 오늘의 한 끼 기록 📸 Section Styles */
+/* ========================================= */
+.meal-photo-record-section {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-xl);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.photo-section-emoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.private-secure-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #F1F5F9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid #E2E8F0;
+}
+
+.photo-error-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Photo Upload Placeholder Card */
+.photo-upload-container {
+  background-color: #F8FAFC;
+  border: 2px dashed #CBD5E1;
+  border-radius: var(--radius-lg);
+  padding: 24px 16px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.photo-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-icon-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
+  color: #16A34A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.upload-placeholder-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.upload-placeholder-desc {
+  font-size: 12px;
+  color: #64748B;
+  line-height: 1.45;
+  max-width: 320px;
+  margin-bottom: 6px;
+}
+
+.photo-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+}
+
+.btn-camera-trigger,
+.btn-album-trigger {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 42px;
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-camera-trigger {
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.25);
+}
+
+.btn-camera-trigger:hover {
+  filter: brightness(1.05);
+}
+
+.btn-album-trigger {
+  background-color: #FFFFFF;
+  color: #334155;
+  border: 1.5px solid #CBD5E1;
+}
+
+.btn-album-trigger:hover {
+  background-color: #F1F5F9;
+  border-color: #94A3B8;
+}
+
+.photo-compressing-text {
+  font-size: 12px;
+  color: var(--primary-600);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* Photo Preview & Memo Box */
+.meal-photo-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #FFFFFF;
+  border-radius: var(--radius-lg);
+  border: 1px solid #E2E8F0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.photo-img-wrapper {
+  position: relative;
+  width: 100%;
+  max-height: 240px;
+  background-color: #0F172A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.meal-preview-img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-saved-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(22, 163, 74, 0.9);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(4px);
+}
+
+.meal-memo-box {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.memo-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #334155;
+}
+
+.memo-presets-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.memo-preset-chip {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 9px;
+  background-color: #F8FAFC;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.memo-preset-chip:hover {
+  background-color: #DCFCE7;
+  color: #15803D;
+  border-color: #86EFAC;
+}
+
+.meal-memo-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #1E293B;
+  background-color: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  resize: none;
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+
+.meal-memo-input:focus {
+  border-color: var(--primary-500);
+  background-color: #FFFFFF;
+}
+
+.photo-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-save-photo {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 800;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+}
+
+.btn-save-photo.saved {
+  background: #15803D;
+}
+
+.btn-retake-photo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 12px;
+  background-color: #F1F5F9;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-remove-photo {
+  height: 40px;
+  padding: 0 10px;
+  background-color: transparent;
+  color: #94A3B8;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-remove-photo:hover {
+  color: #EF4444;
+}
+
+.photo-philosophy-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background-color: #F0FDF4;
+  border: 1px solid #DCFCE7;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 11.5px;
+  color: #166534;
+  line-height: 1.4;
+}
+
+/* ========================================= */
+/* 14 & 15. 오늘의 움직임 추천 🏃 Section */
+/* ========================================= */
+.movement-recommend-section {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius-xl);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.06);
+}
+
+.movement-section-emoji {
+  font-size: 18px;
+}
+
+.movement-sync-pill {
+  font-size: 11px;
+  font-weight: 800;
+  background-color: #FEF3C7;
+  color: #B45309;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+}
+
+.movement-sync-pill.done {
+  background-color: #DCFCE7;
+  color: #15803D;
+}
+
+.movement-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.movement-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.movement-card:hover {
+  border-color: #86EFAC;
+  background-color: #FAFCF9;
+}
+
+.movement-card.selected {
+  border-color: #22C55E;
+  background-color: #F0FDF4;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.12);
+}
+
+.movement-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.movement-card-icon {
+  font-size: 22px;
+  width: 36px;
+  height: 36px;
+  background-color: #F8FAFC;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.movement-card.selected .movement-card-icon {
+  background-color: #DCFCE7;
+}
+
+.movement-card-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.movement-card-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.movement-card.selected .movement-card-title {
+  color: #166534;
+}
+
+.movement-card-desc {
+  font-size: 11.5px;
+  color: #64748B;
+}
+
+.movement-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.movement-radio.active {
+  border-color: #22C55E;
+}
+
+.movement-radio-inner {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #22C55E;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s ease;
+}
+
+.movement-radio.active .movement-radio-inner {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.movement-action-box {
+  margin-top: 4px;
+}
+
+.btn-complete-movement {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-complete-movement:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.movement-already-done-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #DCFCE7;
+  border: 1px solid #86EFAC;
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+}
+
+.done-icon {
+  color: #16A34A;
+  flex-shrink: 0;
+}
+
+.done-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.done-text-wrap strong {
+  font-size: 13px;
+  color: #166534;
+}
+
+.done-text-wrap span {
+  font-size: 11.5px;
+  color: #15803D;
+}
+
+.movement-advice-banner {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.advice-main-quote {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #1E293B;
+  margin: 0;
+}
+
+.advice-sub-text {
+  font-size: 11px;
+  color: #64748B;
+  line-height: 1.4;
+}
+

@@ -76,6 +76,18 @@ export interface UserProfile {
   officeCode: string | null;
 }
 
+export interface MealRecord {
+  date: string;
+  mealImageUrl: string; // Compressed base64 dataURL / blob URL
+  mealMemo?: string;
+  createdAt: string;
+}
+
+export interface WeeklyGoal {
+  targetSeed: number; // e.g. 15 Seed
+  title: string;
+}
+
 export interface OnboardingState {
   step: 'welcome' | 'role' | 'character' | 'preview' | 'nickname' | 'school' | 'home';
   userType: UserType | null;
@@ -88,4 +100,6 @@ export interface OnboardingState {
   seed: number;
   level: LevelNumber;
   dailyRecords: Record<string, DailyRecord>; // key: YYYY-MM-DD
+  mealRecords: Record<string, MealRecord>;   // key: YYYY-MM-DD
+  weeklyGoal: WeeklyGoal;
 }

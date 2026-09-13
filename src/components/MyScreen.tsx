@@ -9,6 +9,10 @@ import {
   Award,
   Search,
   Loader2,
+  Target,
+  Camera,
+  Lock,
+  Check
 } from 'lucide-react';
 import type { OnboardingState, SchoolType, SchoolSearchResult } from '../types/onboarding';
 import { CHARACTERS } from '../data/characters';
@@ -19,6 +23,7 @@ import './MyScreen.css';
 interface MyScreenProps {
   data: OnboardingState;
   onUpdateSchool: (schoolName: string, schoolType: SchoolType) => void;
+  onUpdateWeeklyGoal?: (targetSeed: number) => void;
   onResetAll: () => void;
 }
 
@@ -38,6 +43,7 @@ const QUICK_PRESETS = [
 export const MyScreen: React.FC<MyScreenProps> = ({
   data,
   onUpdateSchool,
+  onUpdateWeeklyGoal,
   onResetAll,
 }) => {
   const [showEditSchoolModal, setShowEditSchoolModal] = useState(false);
@@ -80,6 +86,11 @@ export const MyScreen: React.FC<MyScreenProps> = ({
   const character = CHARACTERS.find((c) => c.id === data.characterId) || CHARACTERS[0];
   const levelInfo = calculateLevelInfo(data.seed);
   const growthImage = getCharacterGrowthImage(character.id, levelInfo.level);
+
+  // Meal photos count
+  const photoCount = Object.keys(data.mealRecords || {}).length;
+
+  const currentWeeklyTarget = data.weeklyGoal?.targetSeed || 15;
 
   const handleSelectResult = (item: SchoolSearchResult) => {
     setEditSchoolName(item.schoolName);
@@ -144,6 +155,68 @@ export const MyScreen: React.FC<MyScreenProps> = ({
             <span>누적 건강 포인트:</span>
             <strong>{data.seed} Seed</strong>
           </div>
+        </div>
+      </div>
+
+      {/* ================================================== */}
+      {/* 1순위: 나의 주간 건강목표 관리 카드 */}
+      {/* ================================================== */}
+      <div className="my-goal-setting-card animate-fade-in-up">
+        <div className="goal-card-header">
+          <div className="goal-card-title-row">
+            <div className="goal-icon-circle">
+              <Target size={18} />
+            </div>
+            <div>
+              <strong className="goal-main-title">나의 주간 건강목표</strong>
+              <span className="goal-sub-title">일주일 동안 심을 목표 Seed를 설정해요</span>
+            </div>
+          </div>
+          <div className="goal-current-badge">
+            <span>목표: <strong>{currentWeeklyTarget} Seed</strong></span>
+          </div>
+        </div>
+
+        <div className="goal-preset-buttons">
+          {[10, 15, 20].map((tSeed) => (
+            <button
+              key={tSeed}
+              type="button"
+              className={`goal-preset-btn ${currentWeeklyTarget === tSeed ? 'active' : ''}`}
+              onClick={() => onUpdateWeeklyGoal?.(tSeed)}
+            >
+              {currentWeeklyTarget === tSeed && <Check size={14} />}
+              <span>{tSeed} Seed {tSeed === 15 ? '(추천)' : ''}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ================================================== */}
+      {/* 3순위 & 16: 나만의 급식판 보관함 (비공개 안심 아카이브) */}
+      {/* ================================================== */}
+      <div className="my-vault-card animate-fade-in-up">
+        <div className="vault-header">
+          <div className="vault-title-row">
+            <div className="vault-icon-circle">
+              <Camera size={18} />
+            </div>
+            <div>
+              <strong className="vault-title">나만의 급식판 보관함</strong>
+              <span className="vault-sub">내 건강한 식사 기록 아카이브</span>
+            </div>
+          </div>
+          <span className="vault-count-pill">{photoCount}장의 기록</span>
+        </div>
+
+        <div className="vault-privacy-box">
+          <div className="vault-privacy-header">
+            <Lock size={14} color="#16A34A" />
+            <strong>안전한 1인 비공개 보관 원칙</strong>
+          </div>
+          <p className="vault-privacy-text">
+            등록하신 급식판 사진은 친구들이나 외부 피드에 공개되지 않으며, 오직 학생 본인만 볼 수 있는 안전한 개인 아카이브로 보관됩니다.
+          </p>
         </div>
       </div>
 
