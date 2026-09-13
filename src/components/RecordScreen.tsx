@@ -1,6 +1,8 @@
 import React from 'react';
 import { CalendarDays, Sparkles, Check, X, UtensilsCrossed } from 'lucide-react';
 import type { DailyRecord, MealData } from '../types/onboarding';
+import { isWeekend } from '../services/mealService';
+import { getFormattedDate } from '../utils/seedRules';
 import './RecordScreen.css';
 
 interface RecordScreenProps {
@@ -14,6 +16,8 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
   dailyRecords,
   mealsByDate,
 }) => {
+  const realToday = getFormattedDate();
+
   // Generate list of dates to display (e.g. today and past 4 days)
   const displayDates: string[] = [];
   const curr = new Date(currentDateString);
@@ -62,15 +66,15 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
           };
 
           const meal = mealsByDate[dateStr];
+          const isWeekendDay = isWeekend(dateStr);
           let mealPreview = '급식 정보 확인 중...';
-          if (meal) {
-            if (meal.isNoMealDay) {
-              mealPreview = '🏖️ 급식 없는 날 (주말/휴업일)';
-            } else if (meal.menu.length > 0) {
-              mealPreview = meal.menu.slice(0, 4).join(' · ') + (meal.menu.length > 4 ? ' 외' : '');
-            } else {
-              mealPreview = '급식 일정 없음';
-            }
+
+          if (isWeekendDay || meal?.isNoMealDay) {
+            mealPreview = '🏖️ 급식 없는 날 (주말/휴업일)';
+          } else if (meal && meal.menu.length > 0) {
+            mealPreview = meal.menu.slice(0, 4).join(' · ') + (meal.menu.length > 4 ? ' 외' : '');
+          } else {
+            mealPreview = '급식 일정 없음';
           }
 
           // Calculate earned seed today (4 core habits each gives 1 Seed)
@@ -80,7 +84,7 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
             (rec.activity ? 1 : 0) +
             (rec.mindCare ? 1 : 0);
 
-          const isToday = dateStr === currentDateString;
+          const isToday = dateStr === realToday;
 
           return (
             <div key={dateStr} className={`record-card ${isToday ? 'today-card' : ''}`}>

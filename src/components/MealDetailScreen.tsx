@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { MealData, DailyRecord } from '../types/onboarding';
-import { getMenuIcon } from '../services/mealService';
+import { getMenuIcon, isWeekend } from '../services/mealService';
 import './MealDetailScreen.css';
 
 interface MealDetailScreenProps {
@@ -31,6 +31,8 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
   onBack,
   onToggleHabit,
 }) => {
+  const isNoMeal = meal.isNoMealDay || isWeekend(meal.date);
+
   const handleHabitClick = (key: keyof DailyRecord, isPrimarySeedHabit: boolean) => {
     const willBeDone = !dailyRecord[key];
     onToggleHabit(key, isPrimarySeedHabit);
@@ -76,17 +78,17 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
           </span>
         </div>
         <h2 className="screen-main-title">
-          {meal.isNoMealDay ? '급식 일정 안내' : '오늘의 급식 메뉴'}
+          {isNoMeal ? '급식 일정 안내' : '오늘의 급식 메뉴'}
         </h2>
         <p className="screen-subtitle">
-          {meal.isNoMealDay
+          {isNoMeal
             ? `오늘(${formattedDateLabel})은 학교 급식이 운영되지 않는 날이에요.`
             : '정성껏 준비된 오늘의 건강하고 균형 잡힌 식단이에요.'}
         </p>
       </div>
 
       {/* Weekend or Holiday No-Meal Banner */}
-      {meal.isNoMealDay ? (
+      {isNoMeal ? (
         <div className="detail-no-meal-banner animate-pop-in">
           <div className="detail-no-meal-header">
             <span className="detail-no-meal-emoji">🏖️</span>

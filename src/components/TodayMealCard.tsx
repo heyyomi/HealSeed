@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight, UtensilsCrossed, ShieldCheck } from 'lucide-react';
 import type { MealData } from '../types/onboarding';
-import { getMenuIcon } from '../services/mealService';
+import { getMenuIcon, isWeekend } from '../services/mealService';
 import './TodayMealCard.css';
 
 interface TodayMealCardProps {
@@ -15,6 +15,8 @@ export const TodayMealCard: React.FC<TodayMealCardProps> = ({
   formattedDateLabel,
   onOpenDetail,
 }) => {
+  const isNoMeal = meal.isNoMealDay || isWeekend(meal.date);
+
   return (
     <div className="today-meal-card animate-pop-in">
       {/* Header */}
@@ -34,7 +36,7 @@ export const TodayMealCard: React.FC<TodayMealCardProps> = ({
       </div>
 
       {/* Menu Preview or Weekend No-Meal Display */}
-      {meal.isNoMealDay ? (
+      {isNoMeal ? (
         <div className="today-no-meal-card-content">
           <div className="today-no-meal-body">
             <div className="no-meal-emoji-badge">🏖️</div>
@@ -68,11 +70,11 @@ export const TodayMealCard: React.FC<TodayMealCardProps> = ({
           onClick={onOpenDetail}
           id="btn-open-meal-detail"
         >
-          <span>{meal.isNoMealDay ? '주말 한 끼 습관 실천하기' : '급식 자세히 보기'}</span>
+          <span>{isNoMeal ? '주말 한 끼 습관 실천하기' : '급식 자세히 보기'}</span>
           <ArrowRight size={16} />
         </button>
         <p className="meal-card-hint">
-          {meal.isNoMealDay
+          {isNoMeal
             ? '주말에도 골고루 먹기, 물 마시기 등 건강습관을 체크하고 Seed를 모을 수 있어요. 🌱'
             : '오늘 급식을 확인하고 건강한 한 끼 습관을 실천해보세요. 🌱'}
         </p>
