@@ -8,7 +8,8 @@ import {
   Heart,
   Droplets,
   Clock,
-  Apple
+  Apple,
+  ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { MealData, DailyRecord } from '../types/onboarding';
@@ -64,9 +65,17 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
 
       {/* Title */}
       <div className="screen-title-section animate-fade-in-up">
-        <div className="meal-badge">
-          <UtensilsCrossed size={14} />
-          <span>학교 급식 식단표</span>
+        <div className="meal-badge-group">
+          <div className="meal-badge">
+            <UtensilsCrossed size={14} />
+            <span>학교 급식 식단표</span>
+          </div>
+          {meal.isRealNeis && (
+            <span className="neis-live-badge">
+              <ShieldCheck size={12} />
+              <span>NEIS 실시간 연동</span>
+            </span>
+          )}
         </div>
         <h2 className="screen-main-title">오늘의 급식 메뉴</h2>
         <p className="screen-subtitle">
@@ -87,26 +96,45 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
         ))}
       </div>
 
-      {/* Nutritional & Allergy Info Area (Waiting for NEIS API) */}
+      {/* Real NEIS Nutritional & Allergy Info Area */}
       <div className="meal-extra-info-section animate-fade-in-up">
-        <div className="info-box-item">
+        {/* Nutrition Info Card */}
+        <div className="info-box-item nutrition-box">
           <div className="info-box-header">
-            <Apple size={16} className="info-box-icon" />
-            <span className="info-box-title">영양 정보</span>
+            <Apple size={16} className="info-box-icon apple-icon" />
+            <span className="info-box-title">성장 영양 정보</span>
           </div>
-          <p className="info-box-status">
-            {meal.nutritionInfo || '급식 정보 연결 준비 중 (NEIS API)'}
-          </p>
+          {meal.nutritionList && meal.nutritionList.length > 0 ? (
+            <div className="nutrition-chips-wrap">
+              {meal.nutritionList.map((n, idx) => (
+                <div key={idx} className="nutrition-chip">
+                  <span className="ntr-name">{n.name}</span>
+                  <strong className="ntr-amount">{n.amount}</strong>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="info-box-status">{meal.nutritionInfo || '영양소 고루 포함'}</p>
+          )}
         </div>
 
-        <div className="info-box-item">
+        {/* Allergy Info Card */}
+        <div className="info-box-item allergy-box">
           <div className="info-box-header">
-            <AlertCircle size={16} className="info-box-icon" />
-            <span className="info-box-title">알레르기 정보</span>
+            <AlertCircle size={16} className="info-box-icon alert-icon" />
+            <span className="info-box-title">알레르기 유발 물질 안내</span>
           </div>
-          <p className="info-box-status">
-            {meal.allergyInfo || '급식 정보 연결 준비 중 (NEIS API)'}
-          </p>
+          {meal.allergyList && meal.allergyList.length > 0 ? (
+            <div className="allergy-chips-wrap">
+              {meal.allergyList.map((allergy, idx) => (
+                <span key={idx} className="allergy-tag">
+                  {allergy}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="info-box-status">{meal.allergyInfo || '특이 유발물질 없음'}</p>
+          )}
         </div>
       </div>
 

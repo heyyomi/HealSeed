@@ -28,12 +28,20 @@ export interface CharacterGrowthStory {
   unlockedItem: string;
 }
 
+export interface NutritionItem {
+  name: string;
+  amount: string;
+}
+
 export interface MealData {
   date: string; // YYYY-MM-DD
   schoolName: string;
   menu: string[];
-  nutritionInfo: string | null; // e.g. "급식 정보 연결 준비 중"
-  allergyInfo: string | null;   // e.g. "급식 정보 연결 준비 중"
+  nutritionInfo: string | null;
+  allergyInfo: string | null;
+  allergyList?: string[];
+  nutritionList?: NutritionItem[];
+  isRealNeis?: boolean;
 }
 
 export interface DailyRecord {
