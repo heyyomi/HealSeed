@@ -24,6 +24,7 @@ export const MovementScreen: React.FC<MovementScreenProps> = ({ date, dailyRecor
   const initial = activities.find((item) => item.id === dailyRecord.movementRecord?.activityId) || featured;
   const [selectedId, setSelectedId] = useState(initial.id);
   const [duration, setDuration] = useState(dailyRecord.movementRecord?.durationMinutes || initial.durationMinutes);
+  const [showHistory, setShowHistory] = useState(false);
   const selected = activities.find((item) => item.id === selectedId) || featured;
   const recentDates = Array.from({ length: 7 }, (_, index) => {
     const item = new Date(`${date}T12:00:00`); item.setDate(item.getDate() - index); return item.toISOString().slice(0, 10);
@@ -80,7 +81,38 @@ export const MovementScreen: React.FC<MovementScreenProps> = ({ date, dailyRecor
         <button type="button" className="primary-action" onClick={() => onSave({ date, activityId: selected.id, activityName: selected.name, durationMinutes: duration })}>{dailyRecord.activity ? '움직임 기록 업데이트' : '오늘 실천했어요 👛 +1 Seed'}</button>
       </section>
 
-      <section className="lifestyle-card compact-history"><h3>최근 움직임 기록</h3>{recentDates.map((itemDate) => { const record = dailyRecords[itemDate]?.movementRecord; return <button key={itemDate} onClick={() => onSelectDate(itemDate)}><span><strong>{dateLabel(itemDate)}</strong><small>{record?.activityName || '움직임 미기록'}</small></span><b>{record ? `${record.durationMinutes}분` : '미기록'}</b></button>; })}</section>
+      <section className={`lifestyle-card compact-history ${!showHistory ? 'collapsed' : ''}`}>
+        <button
+          type="button"
+          className="compact-history-header-btn"
+          onClick={() => setShowHistory((prev) => !prev)}
+          aria-expanded={showHistory}
+        >
+          <div className="compact-history-title-wrap">
+            <h3>최근 움직임 기록</h3>
+            <span className="history-period-pill">최근 7일</span>
+          </div>
+          <span className="history-toggle-pill">
+            {showHistory ? '기록 접기 ▲' : '기록 펼치기 ▼'}
+          </span>
+        </button>
+        {showHistory && (
+          <div className="compact-history-list animate-fade-in">
+            {recentDates.map((itemDate) => {
+              const record = dailyRecords[itemDate]?.movementRecord;
+              return (
+                <button key={itemDate} type="button" onClick={() => onSelectDate(itemDate)}>
+                  <span>
+                    <strong>{dateLabel(itemDate)}</strong>
+                    <small>{record?.activityName || '움직임 미기록'}</small>
+                  </span>
+                  <b>{record ? `${record.durationMinutes}분` : '미기록'}</b>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </main>
   );
 };

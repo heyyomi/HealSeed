@@ -29,6 +29,7 @@ export const MindCareScreen: React.FC<MindCareScreenProps> = ({ date, dailyRecor
   const selected = CHAPTERS.find((chapter) => chapter.id === selectedId) || CHAPTERS[0];
   const [secondsLeft, setSecondsLeft] = useState(selected.minutes * 60);
   const [isRunning, setIsRunning] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const recentDates = useMemo(() => Array.from({ length: 7 }, (_, index) => { const item = new Date(`${date}T12:00:00`); item.setDate(item.getDate() - index); return item.toISOString().slice(0, 10); }), [date]);
 
   useEffect(() => {
@@ -67,7 +68,38 @@ export const MindCareScreen: React.FC<MindCareScreenProps> = ({ date, dailyRecor
         <p className="mind-safety-note">불편함이 느껴지면 언제든 멈추고, 믿을 수 있는 어른이나 전문가에게 도움을 요청하세요.</p>
       </section>
 
-      <section className="lifestyle-card compact-history"><h3>최근 마음돌봄 기록</h3>{recentDates.map((itemDate) => { const record = dailyRecords[itemDate]?.mindCareRecord; return <button key={itemDate} onClick={() => onSelectDate(itemDate)}><span><strong>{dateLabel(itemDate)}</strong><small>{record?.chapterName || '마음돌봄 미기록'}</small></span><b>{record ? `${record.durationMinutes}분` : '미기록'}</b></button>; })}</section>
+      <section className={`lifestyle-card compact-history ${!showHistory ? 'collapsed' : ''}`}>
+        <button
+          type="button"
+          className="compact-history-header-btn"
+          onClick={() => setShowHistory((prev) => !prev)}
+          aria-expanded={showHistory}
+        >
+          <div className="compact-history-title-wrap">
+            <h3>최근 마음돌봄 기록</h3>
+            <span className="history-period-pill">최근 7일</span>
+          </div>
+          <span className="history-toggle-pill">
+            {showHistory ? '기록 접기 ▲' : '기록 펼치기 ▼'}
+          </span>
+        </button>
+        {showHistory && (
+          <div className="compact-history-list animate-fade-in">
+            {recentDates.map((itemDate) => {
+              const record = dailyRecords[itemDate]?.mindCareRecord;
+              return (
+                <button key={itemDate} type="button" onClick={() => onSelectDate(itemDate)}>
+                  <span>
+                    <strong>{dateLabel(itemDate)}</strong>
+                    <small>{record?.chapterName || '마음돌봄 미기록'}</small>
+                  </span>
+                  <b>{record ? `${record.durationMinutes}분` : '미기록'}</b>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </main>
   );
 };

@@ -102,6 +102,39 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     }
   }, [data.schoolName, data.schoolType, currentDateString]);
 
+  // Always scroll to the very top whenever activeTab changes
+  useEffect(() => {
+    const scrollToTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.querySelectorAll(
+        '.home-scroll-area, .lifestyle-screen, .my-screen, .together-screen, .app-viewport, main'
+      ).forEach((el) => {
+        el.scrollTop = 0;
+      });
+    };
+
+    scrollToTop();
+    const rafId = requestAnimationFrame(scrollToTop);
+    const timeoutId = setTimeout(scrollToTop, 50);
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timeoutId);
+    };
+  }, [activeTab]);
+
+  const handleSwitchTab = (tab: 'home' | 'meal' | 'movement' | 'mind' | 'together' | 'my') => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.querySelectorAll(
+      '.home-scroll-area, .lifestyle-screen, .my-screen, .together-screen, .app-viewport, main'
+    ).forEach((el) => {
+      el.scrollTop = 0;
+    });
+    if (tab === 'home') {
+      setCurrentDateString(getFormattedDate());
+    }
+    setActiveTab(tab);
+  };
+
   // Character and dynamic level calculation based strictly on accumulated seed
   const character = CHARACTERS.find((c) => c.id === data.characterId) || CHARACTERS[0];
   const levelInfo = calculateLevelInfo(data.seed);
@@ -798,9 +831,9 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
             onOpenEdit={() => setShowWeeklyGoalModal(true)}
             onToggleCustomPractice={handleToggleCustomPractice}
             onPracticePreset={() => {
-              if (weeklyGoal.habitType === 'meal') setActiveTab('meal');
-              if (weeklyGoal.habitType === 'activity') setActiveTab('movement');
-              if (weeklyGoal.habitType === 'mind') setActiveTab('mind');
+              if (weeklyGoal.habitType === 'meal') handleSwitchTab('meal');
+              if (weeklyGoal.habitType === 'activity') handleSwitchTab('movement');
+              if (weeklyGoal.habitType === 'mind') handleSwitchTab('mind');
               if (weeklyGoal.habitType === 'water') {
                 window.setTimeout(() => document.getElementById('home-water-tracker')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
               }
@@ -825,9 +858,9 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                 <div className="water-cup-heading"><Droplets /><span><strong>물 마시기</strong><small>{todayWaterCups}/5컵 · 5컵 완료 시 👛 +1 Seed</small></span><b>{todayRecord.water ? '완료' : `${todayWaterCups}컵`}</b></div>
                 <div className="water-cup-buttons">{[1, 2, 3, 4, 5].map((cup) => <button key={cup} type="button" className={cup <= todayWaterCups ? 'filled' : ''} onClick={() => handleSetWaterCups(cup)} aria-label={`물 ${cup}컵 기록`} aria-pressed={cup <= todayWaterCups}><GlassWater size={21} /><small>{cup}</small></button>)}</div>
               </div>
-              <button type="button" className="home-compact-action" onClick={() => setActiveTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '완료' : '기록하기'}</b></button>
-              <button type="button" className="home-compact-action" onClick={() => setActiveTab('movement')}><Activity /><span>운동</span><b>{todayRecord.movementRecord ? `${todayRecord.movementRecord.durationMinutes}분` : '시작하기'}</b></button>
-              <button type="button" className={`home-compact-action ${todayRecord.mindCareRecord?.completed ? 'done' : ''}`} onClick={() => setActiveTab('mind')}><Heart /><span>마음돌봄</span><b>{todayRecord.mindCareRecord?.completed ? '완료' : '시작하기'}</b></button>
+              <button type="button" className="home-compact-action" onClick={() => handleSwitchTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '완료' : '기록하기'}</b></button>
+              <button type="button" className="home-compact-action" onClick={() => handleSwitchTab('movement')}><Activity /><span>운동</span><b>{todayRecord.movementRecord ? `${todayRecord.movementRecord.durationMinutes}분` : '시작하기'}</b></button>
+              <button type="button" className={`home-compact-action ${todayRecord.mindCareRecord?.completed ? 'done' : ''}`} onClick={() => handleSwitchTab('mind')}><Heart /><span>마음돌봄</span><b>{todayRecord.mindCareRecord?.completed ? '완료' : '시작하기'}</b></button>
             </div>
           </section>
 
@@ -1303,10 +1336,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
       <nav className="bottom-nav-bar" role="navigation" aria-label="메인 네비게이션">
         <button
           className={`nav-tab-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => {
-            setCurrentDateString(getFormattedDate());
-            setActiveTab('home');
-          }}
+          onClick={() => handleSwitchTab('home')}
           id="tab-home"
         >
           <Home size={22} />
@@ -1315,7 +1345,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
 
         <button
           className={`nav-tab-item ${activeTab === 'meal' ? 'active' : ''}`}
-          onClick={() => setActiveTab('meal')}
+          onClick={() => handleSwitchTab('meal')}
           id="tab-meal"
         >
           <Utensils size={22} />
@@ -1324,7 +1354,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
 
         <button
           className={`nav-tab-item ${activeTab === 'movement' ? 'active' : ''}`}
-          onClick={() => setActiveTab('movement')}
+          onClick={() => handleSwitchTab('movement')}
           id="tab-movement"
         >
           <Activity size={22} />
@@ -1333,7 +1363,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
 
         <button
           className={`nav-tab-item ${activeTab === 'mind' ? 'active' : ''}`}
-          onClick={() => setActiveTab('mind')}
+          onClick={() => handleSwitchTab('mind')}
           id="tab-mind"
         >
           <Heart size={22} />
@@ -1342,7 +1372,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
 
         <button
           className={`nav-tab-item ${activeTab === 'together' ? 'active' : ''}`}
-          onClick={() => setActiveTab('together')}
+          onClick={() => handleSwitchTab('together')}
           id="tab-together"
         >
           <Users size={22} />
@@ -1351,7 +1381,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
 
         <button
           className={`nav-tab-item ${activeTab === 'my' ? 'active' : ''}`}
-          onClick={() => setActiveTab('my')}
+          onClick={() => handleSwitchTab('my')}
           id="tab-my"
         >
           <User size={22} />

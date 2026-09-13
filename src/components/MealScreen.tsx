@@ -32,6 +32,7 @@ export const MealScreen: React.FC<MealScreenProps> = ({
   const [memo, setMemo] = useState(mealRecord?.mealMemo || '');
   const [showMoreNutrition, setShowMoreNutrition] = useState(false);
   const [showAllergies, setShowAllergies] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const coreNutrition = meal ? [
     meal.calories ? { name: '열량', amount: meal.calories } : null,
@@ -141,14 +142,34 @@ export const MealScreen: React.FC<MealScreenProps> = ({
         <button type="button" className="primary-action" disabled={!imageUrl} onClick={() => onSaveMealRecord({ mealImageUrl: imageUrl, mealMemo: memo })}>한 끼 기록 저장</button>
       </section>
 
-      <section className="lifestyle-card compact-history">
-        <h3>최근 급식 기록</h3>
-        {recentDates.map((itemDate) => (
-          <button key={itemDate} type="button" onClick={() => onSelectDate(itemDate)}>
-            <span><strong>{dateLabel(itemDate)}</strong><small>{mealsByDate[itemDate]?.isNoMealDay ? '급식 없음' : '급식 정보'}</small></span>
-            <b>{mealRecords[itemDate]?.mealImageUrl ? '📸 한 끼 기록 있음' : '미기록'}</b>
-          </button>
-        ))}
+      <section className={`lifestyle-card compact-history ${!showHistory ? 'collapsed' : ''}`}>
+        <button
+          type="button"
+          className="compact-history-header-btn"
+          onClick={() => setShowHistory((prev) => !prev)}
+          aria-expanded={showHistory}
+        >
+          <div className="compact-history-title-wrap">
+            <h3>최근 급식·식사 기록</h3>
+            <span className="history-period-pill">최근 7일</span>
+          </div>
+          <span className="history-toggle-pill">
+            {showHistory ? '기록 접기 ▲' : '기록 펼치기 ▼'}
+          </span>
+        </button>
+        {showHistory && (
+          <div className="compact-history-list animate-fade-in">
+            {recentDates.map((itemDate) => (
+              <button key={itemDate} type="button" onClick={() => onSelectDate(itemDate)}>
+                <span>
+                  <strong>{dateLabel(itemDate)}</strong>
+                  <small>{mealsByDate[itemDate]?.isNoMealDay ? '급식 없음' : '급식 정보'}</small>
+                </span>
+                <b>{mealRecords[itemDate]?.mealImageUrl ? '📸 한 끼 기록 있음' : '미기록'}</b>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );
