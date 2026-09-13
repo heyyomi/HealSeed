@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { Activity, CheckCircle2, ChevronLeft, ChevronRight, PlayCircle } from 'lucide-react';
+import { Activity, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DailyRecord } from '../types/onboarding';
-import { getActiveMovementActivities, getFeaturedMovement, getYouTubeEmbedUrl } from '../services/movementService';
+import { getActiveMovementActivities, getFeaturedMovement } from '../services/movementService';
 import './LifestyleTabs.css';
 import './LifestyleTabsPolish.css';
 
@@ -25,7 +25,6 @@ export const MovementScreen: React.FC<MovementScreenProps> = ({ date, dailyRecor
   const [selectedId, setSelectedId] = useState(initial.id);
   const [duration, setDuration] = useState(dailyRecord.movementRecord?.durationMinutes || initial.durationMinutes);
   const selected = activities.find((item) => item.id === selectedId) || featured;
-  const embedUrl = getYouTubeEmbedUrl(selected.youtubeUrl);
   const recentDates = Array.from({ length: 7 }, (_, index) => {
     const item = new Date(`${date}T12:00:00`); item.setDate(item.getDate() - index); return item.toISOString().slice(0, 10);
   });
@@ -51,7 +50,6 @@ export const MovementScreen: React.FC<MovementScreenProps> = ({ date, dailyRecor
       <section className="lifestyle-card movement-action-card">
         <div className="lifestyle-section-head"><h3>{selected.name}</h3><span className="lifestyle-status-pill neutral">{selected.location}</span></div><p>{selected.description}</p>
         <div className="duration-options">{[5, 10, 15].map((minutes) => <button key={minutes} className={duration === minutes ? 'selected' : ''} onClick={() => setDuration(minutes)}>{minutes}분</button>)}</div>
-        {embedUrl && <a className="video-action" href={selected.youtubeUrl} target="_blank" rel="noreferrer"><PlayCircle size={18} /> 동작 영상 보기</a>}
         <button type="button" className="primary-action" onClick={() => onSave({ date, activityId: selected.id, activityName: selected.name, durationMinutes: duration })}>{dailyRecord.activity ? '움직임 기록 업데이트' : '오늘 실천했어요 +1 Seed'}</button>
       </section>
 
