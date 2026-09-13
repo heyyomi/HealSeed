@@ -21,7 +21,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import type { OnboardingState, DailyRecord, MealData, SchoolType, PrimaryHabitKey, WeeklyGoal, UserCondition, CharacterId } from '../types/onboarding';
+import type { OnboardingState, DailyRecord, MealData, SchoolType, WeeklyGoal, UserCondition, CharacterId } from '../types/onboarding';
 import { CHARACTERS } from '../data/characters';
 import { CHARACTER_GROWTH_STORIES } from '../data/growthStages';
 import { CONDITION_OPTIONS, type ConditionOption } from '../data/conditionLevels';
@@ -29,12 +29,15 @@ import { calculateLevelInfo, getFormattedDate } from '../utils/seedRules';
 import { getMealBySchoolAndDate } from '../services/mealService';
 import { getRandomHealthQuote } from '../data/greetingQuotes';
 import { TodayMealCard } from './TodayMealCard';
-import { MealDetailScreen } from './MealDetailScreen';
-import { RecordScreen } from './RecordScreen';
+import { MealScreen } from './MealScreen';
+import { MovementScreen } from './MovementScreen';
 import { TogetherScreen } from './TogetherScreen';
 import { MyScreen } from './MyScreen';
 import { CharacterGrowthImage } from './common/CharacterGrowthImage';
 import { AdminPasswordModal } from './admin/AdminPasswordModal';
+import { WeeklyGoalSummaryCard } from './WeeklyGoalSummaryCard';
+import { WeeklyGoalEditModal } from './WeeklyGoalEditModal';
+import { ensureWeeklyGoal, mapHabitTypeToKey } from '../utils/weeklyGoalUtils';
 import './TempHomeScreen.css';
 
 interface TempHomeScreenProps {
@@ -48,16 +51,18 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
   onUpdateState,
   onReset,
 }) => {
-  const [activeTab, setActiveTab] = useState<'home' | 'record' | 'together' | 'my'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'meal' | 'movement' | 'together' | 'my'>('home');
   const [currentDateString, setCurrentDateString] = useState<string>(getFormattedDate());
   const [currentMeal, setCurrentMeal] = useState<MealData | null>(null);
   const [mealsArchive, setMealsArchive] = useState<Record<string, MealData>>({});
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [, setIsDetailOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ title: string; subtitle: string } | null>(null);
   const [showTestPanel, setShowTestPanel] = useState(false);
   const [showGrowthSheet, setShowGrowthSheet] = useState(false);
   const [dynamicQuote, setDynamicQuote] = useState<string>(() => getRandomHealthQuote());
   const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
+  const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(false);
+  const [openLegalDocument, setOpenLegalDocument] = useState<'privacy' | 'terms' | null>(null);
   const [levelUpCelebration, setLevelUpCelebration] = useState<{
     prevLevel: number;
     newLevel: number;
@@ -99,6 +104,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
   const character = CHARACTERS.find((c) => c.id === data.characterId) || CHARACTERS[0];
   const levelInfo = calculateLevelInfo(data.seed);
   const currentGrowthStory = CHARACTER_GROWTH_STORIES[character.id]?.[levelInfo.level];
+  const weeklyGoal = ensureWeeklyGoal(data.weeklyGoal);
 
   // Current date daily record
   const todayRecord: DailyRecord = data.dailyRecords[currentDateString] || {
@@ -215,10 +221,23 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
         const nextSeed = isPrimarySeedHabit ? prev.seed + 1 : prev.seed;
         const nextLvl = calculateLevelInfo(nextSeed).level;
 
+        // Synchronize with weekly goal if this habit matches the active preset goal
+        const curGoal = ensureWeeklyGoal(prev.weeklyGoal);
+        let nextGoal = curGoal;
+        if (curGoal.type === 'preset' && mapHabitTypeToKey(curGoal.habitType) === habitKey) {
+          if (!curGoal.completedDates.includes(currentDateString)) {
+            nextGoal = {
+              ...curGoal,
+              completedDates: [...curGoal.completedDates, currentDateString],
+            };
+          }
+        }
+
         return {
           ...prev,
           seed: nextSeed,
           level: nextLvl,
+          weeklyGoal: nextGoal,
           dailyRecords: {
             ...prev.dailyRecords,
             [currentDateString]: nextRec,
@@ -268,10 +287,21 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
         const nextSeed = isPrimarySeedHabit ? Math.max(0, prev.seed - 1) : prev.seed;
         const nextLvl = calculateLevelInfo(nextSeed).level;
 
+        // Synchronize with weekly goal if this habit matches the active preset goal
+        const curGoal = ensureWeeklyGoal(prev.weeklyGoal);
+        let nextGoal = curGoal;
+        if (curGoal.type === 'preset' && mapHabitTypeToKey(curGoal.habitType) === habitKey) {
+          nextGoal = {
+            ...curGoal,
+            completedDates: curGoal.completedDates.filter((d) => d !== currentDateString),
+          };
+        }
+
         return {
           ...prev,
           seed: nextSeed,
           level: nextLvl,
+          weeklyGoal: nextGoal,
           dailyRecords: {
             ...prev.dailyRecords,
             [currentDateString]: nextRec,
@@ -326,58 +356,6 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     return `${m}월 ${d}일 ${dayOfWeek}요일`;
   };
 
-  // Calculate Monday to Sunday stats of current week
-  const getWeekDayStats = (currDateStr: string, records: Record<string, DailyRecord>) => {
-    const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
-    const curr = new Date(currDateStr);
-    const day = curr.getDay(); // 0 is Sunday, 1 is Monday...
-    const diffToMon = day === 0 ? -6 : 1 - day;
-    const mon = new Date(curr);
-    mon.setDate(curr.getDate() + diffToMon);
-
-    return dayNames.map((dName, idx) => {
-      const d = new Date(mon);
-      d.setDate(mon.getDate() + idx);
-      const dateStr = getFormattedDate(d);
-      const rec = records[dateStr];
-      const seedCount = rec
-        ? (rec.balancedMeal ? 1 : 0) +
-          (rec.water ? 1 : 0) +
-          (rec.activity ? 1 : 0) +
-          (rec.mindCare ? 1 : 0)
-        : 0;
-
-      return {
-        dayName: dName,
-        dateStr,
-        isCurrent: dateStr === currDateStr,
-        seedCount,
-        shortLabel: `${d.getMonth() + 1}/${d.getDate()}`,
-      };
-    });
-  };
-
-  const weekDayStats = getWeekDayStats(currentDateString, data.dailyRecords);
-
-  // Personal Seed Habit Goal Tracking
-  const targetHabitKey: PrimaryHabitKey = data.weeklyGoal?.habitKey || 'water';
-  const targetDays = data.weeklyGoal?.targetDays || 3;
-  const HABIT_CONFIG: Record<PrimaryHabitKey, { name: string; icon: string; category: string }> = {
-    balancedMeal: { name: '급식 골고루 먹기', icon: '🍽️', category: '식사 습관' },
-    water: { name: '물 자주 마시기', icon: '💧', category: '수분 섭취' },
-    activity: { name: '몸 움직이기', icon: '🏃', category: '신체활동' },
-    mindCare: { name: '마음 돌보기', icon: '💚', category: '마음돌봄' },
-  };
-
-  const weekDaysGoalStatus = weekDayStats.map((day) => {
-    const isDone = !!data.dailyRecords[day.dateStr]?.[targetHabitKey];
-    return {
-      ...day,
-      isDone,
-    };
-  });
-  const achievedDaysCount = weekDaysGoalStatus.filter((d) => d.isDone).length;
-
   // Save meal photo and memo (Section 12)
   const handleSaveMealRecord = (record: { mealImageUrl: string; mealMemo: string }) => {
     onUpdateState((prev) => ({
@@ -399,34 +377,80 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  // Update weekly goal target (Supports Seed or Personal Habit Goal)
-  const handleUpdateWeeklyGoal = (goalOrSeed: number | Partial<WeeklyGoal>) => {
-    if (typeof goalOrSeed === 'number') {
-      onUpdateState((prev) => ({
+  // Update weekly health behavior goal (Section 1 & 9)
+  const handleUpdateWeeklyGoal = (updatedGoal: Partial<WeeklyGoal>) => {
+    onUpdateState((prev) => {
+      const currentGoal = ensureWeeklyGoal(prev.weeklyGoal);
+      const nextType = updatedGoal.type ?? currentGoal.type;
+      const nextHabitType = updatedGoal.habitType !== undefined
+        ? updatedGoal.habitType
+        : currentGoal.habitType;
+      const nextTitle = updatedGoal.title ?? currentGoal.title;
+      const identityChanged = nextType !== currentGoal.type
+        || nextHabitType !== currentGoal.habitType
+        || (nextType === 'custom' && nextTitle !== currentGoal.title);
+
+      let completedDates = currentGoal.completedDates;
+      if (identityChanged && nextType === 'preset') {
+        const habitKey = mapHabitTypeToKey(nextHabitType);
+        completedDates = habitKey
+          ? Object.entries(prev.dailyRecords)
+              .filter(([date, record]) =>
+                date >= currentGoal.weekStartDate
+                && date <= currentDateString
+                && Boolean(record[habitKey])
+              )
+              .map(([date]) => date)
+              .sort()
+          : [];
+      } else if (identityChanged) {
+        completedDates = [];
+      }
+
+      return {
+        ...prev,
+        weeklyGoal: ensureWeeklyGoal({
+          ...currentGoal,
+          ...updatedGoal,
+          type: nextType,
+          habitType: nextType === 'custom' ? null : nextHabitType,
+          title: nextTitle,
+          completedDates,
+        }),
+      };
+    });
+    setToastMessage({
+      title: '건강목표 설정 완료 🌱',
+      subtitle: '이번 주 나의 건강습관 목표가 업데이트되었습니다.',
+    });
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  // Toggle practice for custom written goal (Section 7: No extra Seed added to prevent duplication)
+  const handleToggleCustomPractice = (dateStr: string) => {
+    onUpdateState((prev) => {
+      const goal = ensureWeeklyGoal(prev.weeklyGoal);
+      const isDone = goal.completedDates.includes(dateStr);
+      const nextDates = isDone
+        ? goal.completedDates.filter((d) => d !== dateStr)
+        : [...goal.completedDates, dateStr];
+
+      return {
         ...prev,
         weeklyGoal: {
-          ...prev.weeklyGoal,
-          targetSeed: goalOrSeed,
-          title: `이번 주 ${goalOrSeed} Seed 심기 🌱`,
+          ...goal,
+          completedDates: nextDates,
         },
-      }));
-      setToastMessage({
-        title: '주간 목표 변경 🎯',
-        subtitle: `이번 주 목표가 ${goalOrSeed} Seed로 설정되었습니다.`,
-      });
-    } else {
-      onUpdateState((prev) => ({
-        ...prev,
-        weeklyGoal: {
-          ...prev.weeklyGoal,
-          ...goalOrSeed,
-        },
-      }));
-      setToastMessage({
-        title: '건강씨앗 목표 변경 🎯',
-        subtitle: '나의 건강씨앗 목표가 업데이트되었습니다.',
-      });
-    }
+      };
+    });
+
+    const isAlreadyDone = weeklyGoal.completedDates.includes(dateStr);
+    setToastMessage({
+      title: isAlreadyDone ? '실천 기록 취소' : '오늘의 실천 완료! 🎯',
+      subtitle: isAlreadyDone
+        ? '오늘의 실천 기록이 취소되었습니다.'
+        : '이번 주 나의 건강목표 실천일이 기록되었어요.',
+    });
     setTimeout(() => setToastMessage(null), 2500);
   };
 
@@ -466,11 +490,18 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
       // 1일 1 Seed 제한: 오늘 아직 몸 움직이기로 Seed를 받지 않은 경우에만 +1 Seed
       const nextSeed = !wasAlreadyDone ? prev.seed + 1 : prev.seed;
       const nextLvl = calculateLevelInfo(nextSeed).level;
+      const currentGoal = ensureWeeklyGoal(prev.weeklyGoal);
+      const nextGoal = currentGoal.type === 'preset'
+        && currentGoal.habitType === 'activity'
+        && !currentGoal.completedDates.includes(record.date)
+        ? { ...currentGoal, completedDates: [...currentGoal.completedDates, record.date] }
+        : currentGoal;
 
       return {
         ...prev,
         seed: nextSeed,
         level: nextLvl,
+        weeklyGoal: nextGoal,
         dailyRecords: {
           ...prev.dailyRecords,
           [record.date]: nextRec,
@@ -484,22 +515,6 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     });
     setTimeout(() => setToastMessage(null), 2500);
   };
-
-  // If Meal Detail view is open, render MealDetailScreen
-  if (isDetailOpen && currentMeal) {
-    return (
-      <MealDetailScreen
-        meal={currentMeal}
-        formattedDateLabel={getFormattedDateLabel(currentDateString)}
-        dailyRecord={todayRecord}
-        mealRecord={data.mealRecords[currentDateString]}
-        onBack={() => setIsDetailOpen(false)}
-        onToggleHabit={handleToggleHabit}
-        onSaveMealRecord={handleSaveMealRecord}
-        onSaveMovementRecord={handleSaveMovementRecord}
-      />
-    );
-  }
 
   return (
     <div className="home-screen-wrapper">
@@ -679,6 +694,44 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
             </div>
           </section>
 
+          <WeeklyGoalSummaryCard
+            goal={weeklyGoal}
+            currentDateString={getFormattedDate()}
+            onOpenEdit={() => setShowWeeklyGoalModal(true)}
+            onToggleCustomPractice={handleToggleCustomPractice}
+          />
+
+          <section className="home-overview-card animate-fade-in-up">
+            <div className="home-overview-heading">
+              <div><span>오늘의 건강생활</span><h3>{getFormattedDateLabel(getFormattedDate())}</h3></div>
+              <strong>+{completedTodayCount} Seed</strong>
+            </div>
+            <div className="home-condition-row">
+              <span>컨디션</span>
+              <div>{CONDITION_OPTIONS.map((option) => <button key={option.level} type="button" className={todayRecord.condition?.level === option.level ? 'selected' : ''} onClick={() => handleSelectCondition(option)} aria-label={option.label}>{option.emoji}</button>)}</div>
+            </div>
+            <div className="home-summary-grid">
+              <button type="button" onClick={() => setActiveTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '실천 완료' : '기록하기'}</b></button>
+              <button type="button" className={todayRecord.water ? 'done' : ''} onClick={() => handleToggleHabit('water', true)}><Droplets /><span>물 마시기</span><b>{todayRecord.water ? '완료' : '+1 Seed'}</b></button>
+              <button type="button" onClick={() => setActiveTab('movement')}><Activity /><span>오늘의 운동</span><b>{todayRecord.movementRecord ? `${todayRecord.movementRecord.durationMinutes}분` : '시작하기'}</b></button>
+              <button type="button" className={todayRecord.mindCare ? 'done' : ''} onClick={() => handleToggleHabit('mindCare', true)}><Heart /><span>마음 돌보기</span><b>{todayRecord.mindCare ? '완료' : '+1 Seed'}</b></button>
+            </div>
+          </section>
+
+          <section className="home-week-chart animate-fade-in-up">
+            <div className="home-week-chart-heading"><h3>최근 7일 실천 흐름</h3><span>하루 최대 4가지</span></div>
+            <div className="home-week-bars">
+              {Array.from({ length: 7 }, (_, index) => {
+                const value = new Date(); value.setDate(value.getDate() - (6 - index));
+                const key = getFormattedDate(value);
+                const record = data.dailyRecords[key];
+                const count = record ? Number(record.balancedMeal) + Number(record.water) + Number(record.activity) + Number(record.mindCare) : 0;
+                return <div key={key}><span className="week-bar-track"><i style={{ height: `${Math.max(8, count * 25)}%` }} /></span><b>{['일','월','화','수','목','금','토'][value.getDay()]}</b><small>{count}</small></div>;
+              })}
+            </div>
+          </section>
+
+          <div className="legacy-home-details" aria-hidden="true">
           {/* Date Selector Row */}
           <div className="date-navigator-card">
             <button
@@ -701,6 +754,14 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
               <ChevronRight size={18} />
             </button>
           </div>
+
+          {/* 🌱 나의 주간 건강목표 컴팩트 카드 (Section 5 & 8) */}
+          <WeeklyGoalSummaryCard
+            goal={weeklyGoal}
+            currentDateString={currentDateString}
+            onOpenEdit={() => setShowWeeklyGoalModal(true)}
+            onToggleCustomPractice={handleToggleCustomPractice}
+          />
 
           {/* 1. TODAY'S SCHOOL MEAL CARD (NEW FEATURE) */}
           {currentMeal && (
@@ -808,8 +869,8 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                   <div className="habit-info">
                     <div className="habit-category-row">
                       <span className="habit-category">식사 습관</span>
-                      {targetHabitKey === 'balancedMeal' && (
-                        <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                      {weeklyGoal.type === 'preset' && weeklyGoal.habitType === 'meal' && (
+                        <span className="my-goal-mini-badge">🌱 이번 주 나의 목표</span>
                       )}
                     </div>
                     <span className="habit-title">급식 골고루 먹기</span>
@@ -842,8 +903,8 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                   <div className="habit-info">
                     <div className="habit-category-row">
                       <span className="habit-category">수분 섭취</span>
-                      {targetHabitKey === 'water' && (
-                        <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                      {weeklyGoal.type === 'preset' && weeklyGoal.habitType === 'water' && (
+                        <span className="my-goal-mini-badge">🌱 이번 주 나의 목표</span>
                       )}
                     </div>
                     <span className="habit-title">물 충분히 마시기</span>
@@ -876,8 +937,8 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                   <div className="habit-info">
                     <div className="habit-category-row">
                       <span className="habit-category">신체활동</span>
-                      {targetHabitKey === 'activity' && (
-                        <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                      {weeklyGoal.type === 'preset' && weeklyGoal.habitType === 'activity' && (
+                        <span className="my-goal-mini-badge">🌱 이번 주 나의 목표</span>
                       )}
                     </div>
                     <span className="habit-title">몸 움직이기</span>
@@ -910,8 +971,8 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                   <div className="habit-info">
                     <div className="habit-category-row">
                       <span className="habit-category">마음돌봄</span>
-                      {targetHabitKey === 'mindCare' && (
-                        <span className="my-goal-mini-badge">🌱 나의 목표</span>
+                      {weeklyGoal.type === 'preset' && weeklyGoal.habitType === 'mind' && (
+                        <span className="my-goal-mini-badge">🌱 이번 주 나의 목표</span>
                       )}
                     </div>
                     <span className="habit-title">마음 돌보기</span>
@@ -1056,6 +1117,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
               </div>
             </div>
           </section>
+          </div>
 
           {/* School Wellness Guide Card */}
           <section className="wellness-philosophy-card">
@@ -1066,17 +1128,47 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
               <li>친구들과 함께 응원하며 즐겁게 건강 습관을 키워가요!</li>
             </ul>
           </section>
+
+          <footer className="home-legal-footer" aria-label="서비스 정책">
+            <div className="home-legal-links">
+              <button type="button" onClick={() => setOpenLegalDocument('privacy')}>
+                개인정보처리방침
+              </button>
+              <span aria-hidden="true">·</span>
+              <button type="button" onClick={() => setOpenLegalDocument('terms')}>
+                이용약관
+              </button>
+            </div>
+            <span className="home-legal-caption">HealSeed 정책 예시</span>
+          </footer>
         </main>
       )}
 
-      {/* RECORD TAB */}
-      {activeTab === 'record' && (
-        <RecordScreen
-          currentDateString={currentDateString}
-          dailyRecords={data.dailyRecords}
+      {activeTab === 'meal' && (
+        <MealScreen
+          key={currentDateString}
+          date={currentDateString}
+          meal={currentMeal}
+          dailyRecord={todayRecord}
+          mealRecord={data.mealRecords[currentDateString]}
           mealsByDate={mealsArchive}
           mealRecords={data.mealRecords}
-          schoolName={data.schoolName}
+          onShiftDate={handleShiftDate}
+          onSelectDate={setCurrentDateString}
+          onToggleHabit={handleToggleHabit}
+          onSaveMealRecord={handleSaveMealRecord}
+        />
+      )}
+
+      {activeTab === 'movement' && (
+        <MovementScreen
+          key={currentDateString}
+          date={currentDateString}
+          dailyRecord={todayRecord}
+          dailyRecords={data.dailyRecords}
+          onShiftDate={handleShiftDate}
+          onSelectDate={setCurrentDateString}
+          onSave={handleSaveMovementRecord}
         />
       )}
 
@@ -1096,11 +1188,14 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
         />
       )}
 
-      {/* Bottom 4 Tabs Navigation */}
+      {/* Bottom 5 Tabs Navigation */}
       <nav className="bottom-nav-bar" role="navigation" aria-label="메인 네비게이션">
         <button
           className={`nav-tab-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => setActiveTab('home')}
+          onClick={() => {
+            setCurrentDateString(getFormattedDate());
+            setActiveTab('home');
+          }}
           id="tab-home"
         >
           <Home size={22} />
@@ -1108,12 +1203,21 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
         </button>
 
         <button
-          className={`nav-tab-item ${activeTab === 'record' ? 'active' : ''}`}
-          onClick={() => setActiveTab('record')}
-          id="tab-record"
+          className={`nav-tab-item ${activeTab === 'meal' ? 'active' : ''}`}
+          onClick={() => setActiveTab('meal')}
+          id="tab-meal"
         >
-          <CalendarDays size={22} />
-          <span>기록</span>
+          <Utensils size={22} />
+          <span>급식</span>
+        </button>
+
+        <button
+          className={`nav-tab-item ${activeTab === 'movement' ? 'active' : ''}`}
+          onClick={() => setActiveTab('movement')}
+          id="tab-movement"
+        >
+          <Activity size={22} />
+          <span>운동</span>
         </button>
 
         <button
@@ -1198,76 +1302,49 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                 </div>
               </div>
 
-              {/* 2. 주간 건강목표: 이번 주 나의 건강씨앗 */}
+              {/* 2. 주간 건강목표: 이번 주 나의 건강목표 */}
               <div className="growth-sheet-box personal-goal-box">
                 <div className="sheet-box-title-row">
                   <Target size={16} className="box-title-icon" />
-                  <strong className="sheet-box-title">🌱 이번 주 나의 건강씨앗</strong>
+                  <strong className="sheet-box-title">🌱 나의 주간 건강목표</strong>
                 </div>
 
-                <div className="sheet-goal-card">
-                  <div className="sheet-goal-header">
-                    <span className="sheet-goal-icon">{HABIT_CONFIG[targetHabitKey].icon}</span>
-                    <div className="sheet-goal-texts">
-                      <strong className="sheet-goal-name">
-                        {data.weeklyGoal?.habitName || HABIT_CONFIG[targetHabitKey].name}
-                      </strong>
-                      <span className="sheet-goal-sub">이번 주 꾸준히 실천할 나의 건강씨앗</span>
-                    </div>
-                  </div>
+                <WeeklyGoalSummaryCard
+                  goal={weeklyGoal}
+                  currentDateString={currentDateString}
+                  onOpenEdit={() => {
+                    setShowGrowthSheet(false);
+                    setShowWeeklyGoalModal(true);
+                  }}
+                  onToggleCustomPractice={handleToggleCustomPractice}
+                />
 
-                  <div className="sheet-goal-stats">
-                    <div className="sheet-stat-col">
-                      <span className="stat-name">목표</span>
-                      <strong className="stat-value">이번 주 {targetDays}일 실천</strong>
-                    </div>
-                    <div className="sheet-stat-col">
-                      <span className="stat-name">현재</span>
-                      <strong className="stat-value highlight">
-                        {achievedDaysCount} / {targetDays}일
-                      </strong>
-                    </div>
-                  </div>
-
-                  {/* 7-Day Dots Row (월 ○ 화 ○ 수 ● 목 ○ 금 ○ 토 ○ 일 ○) */}
-                  <div className="sheet-week-dots-row">
-                    {weekDaysGoalStatus.map((day) => (
-                      <div key={day.dateStr} className={`sheet-day-item ${day.isCurrent ? 'today' : ''}`}>
-                        <span className="day-name">{day.dayName}</span>
-                        <span className={`day-circle ${day.isDone ? 'done' : 'empty'}`}>
-                          {day.isDone ? '●' : '○'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Seed vs 나의 건강씨앗 개념 구분 안내 */}
+                {/* Seed vs 나의 주간 건강목표 개념 구분 안내 (Section 1) */}
                 <div className="role-distinction-card">
                   <div className="distinction-row">
                     <strong className="distinction-badge">🌱 Seed:</strong>
                     <span className="distinction-desc">
-                      모든 건강습관 실천이 누적되어 HealSeed Mate가 성장하는 전체 성장 포인트
+                      건강습관을 실천할 때마다 누적되어 메이트가 5단계로 성장하는 전체 성장 포인트
                     </span>
                   </div>
                   <div className="distinction-row">
-                    <strong className="distinction-badge">🎯 나의 건강씨앗:</strong>
+                    <strong className="distinction-badge">🎯 주간 건강목표:</strong>
                     <span className="distinction-desc">
-                      사용자가 선택한 특정 건강습관을 이번 주에 꾸준히 실천하는 개인 목표
+                      이번 주 내가 꾸준히 실천하고 싶은 구체적인 건강행동을 정하고 실천하는 기능
                     </span>
                   </div>
                 </div>
 
-                {/* MY 페이지 이동 버튼 */}
+                {/* 목표 변경 버튼 */}
                 <button
                   type="button"
                   className="btn-sheet-link-my"
                   onClick={() => {
                     setShowGrowthSheet(false);
-                    setActiveTab('my');
+                    setShowWeeklyGoalModal(true);
                   }}
                 >
-                  <span>MY 페이지에서 건강목표 변경하기 &gt;</span>
+                  <span>주간 건강목표 변경하기 &gt;</span>
                 </button>
               </div>
             </div>
@@ -1338,6 +1415,79 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
                 <ArrowRight size={18} />
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Health Behavior Goal Edit Modal (Section 1~4) */}
+      {showWeeklyGoalModal && (
+        <WeeklyGoalEditModal
+          isOpen
+          onClose={() => setShowWeeklyGoalModal(false)}
+          currentGoal={weeklyGoal}
+          onSave={handleUpdateWeeklyGoal}
+        />
+      )}
+
+      {openLegalDocument && (
+        <div
+          className="legal-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="legal-modal-title"
+          onClick={() => setOpenLegalDocument(null)}
+        >
+          <div className="legal-modal-sheet animate-pop-in" onClick={(event) => event.stopPropagation()}>
+            <div className="legal-modal-header">
+              <div>
+                <span className="legal-example-badge">예시 문서</span>
+                <h3 id="legal-modal-title">
+                  {openLegalDocument === 'privacy' ? '개인정보처리방침' : '이용약관'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="legal-modal-close"
+                onClick={() => setOpenLegalDocument(null)}
+                aria-label="닫기"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="legal-modal-content">
+              {openLegalDocument === 'privacy' ? (
+                <>
+                  <p className="legal-intro">
+                    아래 내용은 HealSeed 서비스 구성을 설명하기 위한 예시입니다. 실제 운영 전 학교와 운영 주체의 정책에 맞게 검토·확정해야 합니다.
+                  </p>
+                  <section><h4>1. 수집하는 정보</h4><p>닉네임, 사용자 유형, 선택한 캐릭터, 학교 정보, 건강습관·컨디션·움직임 기록, 사용자가 직접 등록한 한 끼 사진과 메모를 수집할 수 있습니다.</p></section>
+                  <section><h4>2. 이용 목적</h4><p>개인별 건강습관 기록 제공, 캐릭터 성장과 Seed 현황 표시, 학교 급식 정보 제공, 서비스 품질 개선을 위해 이용합니다.</p></section>
+                  <section><h4>3. 보관 및 삭제</h4><p>정보는 서비스 제공에 필요한 기간 동안 보관하며, 이용자가 초기화 또는 삭제를 요청하면 관련 법령상 보관 의무가 있는 경우를 제외하고 삭제합니다.</p></section>
+                  <section><h4>4. 제3자 제공</h4><p>법령에 근거가 있거나 이용자의 동의를 받은 경우를 제외하고 개인정보를 제3자에게 제공하지 않습니다. NEIS 급식정보 조회에는 사용자가 선택한 학교 정보가 활용될 수 있습니다.</p></section>
+                  <section><h4>5. 이용자의 권리</h4><p>이용자는 자신의 기록을 확인·수정·삭제하거나 개인정보 처리에 관한 문의를 할 수 있습니다. 아동·청소년 이용자의 경우 필요한 보호 절차를 마련합니다.</p></section>
+                  <section><h4>6. 안전성 확보</h4><p>접근 권한 관리, 안전한 저장과 전송 등 개인정보 보호에 필요한 조치를 적용합니다.</p></section>
+                  <p className="legal-effective-date">예시 시행일: 2026년 9월 13일</p>
+                </>
+              ) : (
+                <>
+                  <p className="legal-intro">
+                    아래 내용은 HealSeed 서비스 구성을 설명하기 위한 예시이며 법률 자문을 대신하지 않습니다. 실제 운영 조건에 맞게 검토·확정해야 합니다.
+                  </p>
+                  <section><h4>1. 서비스 목적</h4><p>HealSeed는 사용자가 일상 속 건강행동을 기록하고 긍정적인 습관을 이어가도록 돕는 교육·건강습관 지원 서비스입니다.</p></section>
+                  <section><h4>2. 이용자의 약속</h4><p>이용자는 정확한 정보를 사용하고, 다른 사람의 권리를 침해하거나 서비스 운영을 방해하는 행위를 하지 않아야 합니다.</p></section>
+                  <section><h4>3. 건강정보 안내</h4><p>서비스의 콘텐츠와 기록은 일반적인 건강습관 형성을 위한 참고 정보이며 의학적 진단이나 치료를 대신하지 않습니다.</p></section>
+                  <section><h4>4. 사진과 기록</h4><p>이용자는 자신이 이용 권한을 가진 사진과 내용만 등록해야 하며, 민감하거나 다른 사람을 식별할 수 있는 정보가 포함되지 않도록 주의해야 합니다.</p></section>
+                  <section><h4>5. 서비스 변경 및 중단</h4><p>안전한 운영과 기능 개선을 위해 서비스 일부가 변경되거나 일시 중단될 수 있으며, 중요한 변경은 적절한 방법으로 안내합니다.</p></section>
+                  <section><h4>6. 이용 종료</h4><p>이용자는 제공되는 초기화·삭제 기능 또는 운영자 문의를 통해 서비스 이용 종료를 요청할 수 있습니다.</p></section>
+                  <p className="legal-effective-date">예시 시행일: 2026년 9월 13일</p>
+                </>
+              )}
+            </div>
+
+            <button type="button" className="legal-confirm-button" onClick={() => setOpenLegalDocument(null)}>
+              확인했어요
+            </button>
           </div>
         </div>
       )}

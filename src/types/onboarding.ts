@@ -121,12 +121,16 @@ export interface MealRecord {
 
 export type PrimaryHabitKey = 'balancedMeal' | 'water' | 'activity' | 'mindCare';
 
+export type WeeklyGoalType = 'preset' | 'custom';
+export type WeeklyGoalHabitType = 'meal' | 'water' | 'activity' | 'mind' | null;
+
 export interface WeeklyGoal {
-  habitKey: PrimaryHabitKey; // 'water' (기본값)
-  habitName: string;         // '물 자주 마시기'
-  targetDays: number;        // e.g. 3
-  targetSeed?: number;       // 레거시 호환
-  title?: string;
+  type: WeeklyGoalType;
+  habitType: WeeklyGoalHabitType;
+  title: string;
+  targetDays: number;
+  completedDates: string[];
+  weekStartDate: string;
 }
 
 export type UserRole = 'user' | 'admin';

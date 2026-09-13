@@ -9,22 +9,22 @@ import {
   Award,
   Search,
   Loader2,
-  Target,
-  Camera,
   Lock,
   Check
 } from 'lucide-react';
-import type { OnboardingState, SchoolType, SchoolSearchResult, PrimaryHabitKey, WeeklyGoal } from '../types/onboarding';
+import type { OnboardingState, SchoolType, SchoolSearchResult, WeeklyGoal } from '../types/onboarding';
 import { CHARACTERS } from '../data/characters';
 import { calculateLevelInfo } from '../utils/seedRules';
 import { searchSchoolsFromNEIS } from '../services/mealService';
 import { CharacterGrowthImage } from './common/CharacterGrowthImage';
+import { ensureWeeklyGoal, PRESET_GOAL_OPTIONS, getGoalIcon } from '../utils/weeklyGoalUtils';
+import { WeeklyGoalEditModal } from './WeeklyGoalEditModal';
 import './MyScreen.css';
 
 interface MyScreenProps {
   data: OnboardingState;
   onUpdateSchool: (schoolName: string, schoolType: SchoolType) => void;
-  onUpdateWeeklyGoal?: (goalOrSeed: number | Partial<WeeklyGoal>) => void;
+  onUpdateWeeklyGoal?: (updatedGoal: Partial<WeeklyGoal>) => void;
   onResetAll: () => void;
   onSwitchToAdmin?: () => void;
 }
@@ -90,11 +90,14 @@ export const MyScreen: React.FC<MyScreenProps> = ({
   const levelInfo = calculateLevelInfo(data.seed);
 
   // Meal photos count
-  const photoCount = Object.keys(data.mealRecords || {}).length;
 
-  const currentHabitKey: PrimaryHabitKey = data.weeklyGoal?.habitKey || 'water';
-  const currentTargetDays = data.weeklyGoal?.targetDays || 3;
-  const currentHabitName = data.weeklyGoal?.habitName || '물 자주 마시기';
+  const weeklyGoal = ensureWeeklyGoal(data.weeklyGoal);
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  const [goalModalMode, setGoalModalMode] = useState<'preset' | 'custom'>('preset');
+
+  const currentTargetDays = weeklyGoal.targetDays || 3;
+  const completedDaysCount = weeklyGoal.completedDates?.length || 0;
+  const goalIcon = getGoalIcon(weeklyGoal);
 
   const handleSelectResult = (item: SchoolSearchResult) => {
     setEditSchoolName(item.schoolName);
@@ -168,102 +171,165 @@ export const MyScreen: React.FC<MyScreenProps> = ({
       </div>
 
       {/* ================================================== */}
-      {/* 나의 주간 건강목표 관리 카드 (나의 건강씨앗 & 목표 일수) */}
+      {/* 9. MY 나의 주간 건강목표 관리 카드 */}
       {/* ================================================== */}
       <div className="my-goal-setting-card animate-fade-in-up">
+        {/* Card Header */}
         <div className="goal-card-header">
           <div className="goal-card-title-row">
             <div className="goal-icon-circle">
-              <Target size={18} />
+              <span style={{ fontSize: '18px' }}>🌱</span>
             </div>
             <div>
               <strong className="goal-main-title">나의 주간 건강목표</strong>
-              <span className="goal-sub-title">이번 주 집중할 나의 건강씨앗과 실천 일수를 설정해요</span>
+              <span className="goal-sub-title">이번 주 내가 꾸준히 실천할 건강습관을 정해보세요.</span>
             </div>
           </div>
-          <div className="goal-current-badge">
-            <span><strong>{currentHabitName}</strong> (주 {currentTargetDays}일)</span>
+          <button
+            type="button"
+            className="my-goal-edit-btn"
+            onClick={() => {
+              setGoalModalMode(weeklyGoal.type);
+              setShowGoalModal(true);
+            }}
+          >
+            <Edit3 size={13} />
+            <span>목표 수정</span>
+          </button>
+        </div>
+
+        {/* Current Active Goal Banner */}
+        <div className="my-goal-status-banner">
+          <div className="my-goal-banner-header">
+            <div className="my-goal-badge-wrap">
+              <span className="my-goal-icon-badge">{goalIcon}</span>
+              <strong className="my-goal-active-title">
+                {weeklyGoal.type === 'custom' ? `"${weeklyGoal.title}"` : weeklyGoal.title}
+              </strong>
+            </div>
+            <span className={`my-goal-type-pill ${weeklyGoal.type}`}>
+              {weeklyGoal.type === 'custom' ? '직접 정한 목표' : '추천 건강목표'}
+            </span>
+          </div>
+
+          <div className="my-goal-progress-row">
+            <span className="my-goal-target-label">이번 주 목표 {currentTargetDays}일</span>
+            <div className="my-goal-dots" aria-label={`실천 진행도 ${completedDaysCount} / ${currentTargetDays}일`}>
+              {Array.from({ length: currentTargetDays }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`my-goal-dot ${i < completedDaysCount ? 'filled' : ''}`}
+                  title={`${i + 1}일차`}
+                />
+              ))}
+            </div>
+            <span className="my-goal-count-label">
+              <strong>{completedDaysCount}</strong> / {currentTargetDays}일 실천
+            </span>
+          </div>
+
+          <div className="my-goal-tip-box">
+            {weeklyGoal.type === 'preset' ? (
+              <span>💡 [홈] 화면의 <strong>오늘의 건강습관</strong> 실천 시 자동으로 실천일수가 기록돼요 (+1 Seed)</span>
+            ) : (
+              <span>💡 [홈] 화면의 <strong>오늘 실천했어요 ✓</strong> 버튼으로 실천일수를 기록해요 (Seed 중복 없음)</span>
+            )}
           </div>
         </div>
 
-        {/* 1. 나의 건강씨앗 습관 선택 (4종) */}
+        {/* 1. 추천 건강목표 4종 선택 */}
         <div className="my-goal-sub-section">
-          <span className="my-goal-sub-label">🌱 이번 주 나의 건강씨앗 습관 선택</span>
+          <div className="my-goal-sub-header">
+            <span className="my-goal-sub-label">🌱 추천 건강목표 선택</span>
+            <span className="my-goal-sub-hint">오늘의 4대 건강습관과 연동</span>
+          </div>
           <div className="goal-habit-choice-grid">
-            {[
-              { key: 'balancedMeal' as PrimaryHabitKey, name: '급식 골고루 먹기', icon: '🍽️' },
-              { key: 'water' as PrimaryHabitKey, name: '물 자주 마시기', icon: '💧' },
-              { key: 'activity' as PrimaryHabitKey, name: '몸 움직이기', icon: '🏃' },
-              { key: 'mindCare' as PrimaryHabitKey, name: '마음 돌보기', icon: '💚' },
-            ].map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className={`habit-select-chip ${currentHabitKey === item.key ? 'active' : ''}`}
-                onClick={() =>
-                  onUpdateWeeklyGoal?.({
-                    habitKey: item.key,
-                    habitName: item.name,
-                    title: `${item.name} (주 ${currentTargetDays}일)`,
-                  })
-                }
-              >
-                <span>{item.icon} {item.name}</span>
-                {currentHabitKey === item.key && <Check size={13} strokeWidth={3} />}
-              </button>
-            ))}
+            {PRESET_GOAL_OPTIONS.map((item) => {
+              const isSelected =
+                weeklyGoal.type === 'preset' && weeklyGoal.habitType === item.habitType;
+              return (
+                <button
+                  key={item.habitType}
+                  type="button"
+                  className={`habit-select-chip ${isSelected ? 'active' : ''}`}
+                  onClick={() =>
+                    onUpdateWeeklyGoal?.({
+                      type: 'preset',
+                      habitType: item.habitType,
+                      title: item.title,
+                    })
+                  }
+                >
+                  <span className="habit-chip-label">
+                    <span className="habit-chip-icon">{item.icon}</span>
+                    <span>{item.title}</span>
+                  </span>
+                  {isSelected && <Check size={14} strokeWidth={3} className="habit-check-icon" />}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* 2. 주간 목표 일수 선택 (3일 / 4일 / 5일) */}
-        <div className="my-goal-sub-section" style={{ marginTop: '12px' }}>
-          <span className="my-goal-sub-label">📅 목표 실천 일수</span>
-          <div className="goal-preset-buttons">
-            {[3, 4, 5].map((days) => (
-              <button
-                key={days}
-                type="button"
-                className={`goal-preset-btn ${currentTargetDays === days ? 'active' : ''}`}
-                onClick={() =>
-                  onUpdateWeeklyGoal?.({
-                    targetDays: days,
-                    title: `${currentHabitName} (주 ${days}일)`,
-                  })
-                }
-              >
-                {currentTargetDays === days && <Check size={14} />}
-                <span>주 {days}일 {days === 3 ? '(추천)' : ''}</span>
-              </button>
-            ))}
+        {/* 2. 직접 목표 작성 기능 */}
+        <div className="my-goal-sub-section">
+          <div className="my-goal-sub-header">
+            <span className="my-goal-sub-label">✏️ 직접 목표 작성 기능</span>
+            <span className="my-goal-sub-hint">나만의 구체적인 실천 행동</span>
           </div>
-        </div>
-      </div>
-
-      {/* ================================================== */}
-      {/* 3순위 & 16: 나만의 급식판 보관함 (비공개 안심 아카이브) */}
-      {/* ================================================== */}
-      <div className="my-vault-card animate-fade-in-up">
-        <div className="vault-header">
-          <div className="vault-title-row">
-            <div className="vault-icon-circle">
-              <Camera size={18} />
+          <button
+            type="button"
+            className={`my-custom-goal-btn ${weeklyGoal.type === 'custom' ? 'active' : ''}`}
+            onClick={() => {
+              setGoalModalMode('custom');
+              setShowGoalModal(true);
+            }}
+          >
+            <div className="my-custom-btn-left">
+              <Edit3 size={15} />
+              <span>
+                {weeklyGoal.type === 'custom'
+                  ? `✏️ 직접 작성 목표: "${weeklyGoal.title}"`
+                  : '✏️ 직접 목표 정하기'}
+              </span>
             </div>
-            <div>
-              <strong className="vault-title">나만의 급식판 보관함</strong>
-              <span className="vault-sub">내 건강한 식사 기록 아카이브</span>
-            </div>
-          </div>
-          <span className="vault-count-pill">{photoCount}장의 기록</span>
-        </div>
-
-        <div className="vault-privacy-box">
-          <div className="vault-privacy-header">
-            <Lock size={14} color="#16A34A" />
-            <strong>안전한 1인 비공개 보관 원칙</strong>
-          </div>
-          <p className="vault-privacy-text">
-            등록하신 급식판 사진은 친구들이나 외부 피드에 공개되지 않으며, 오직 학생 본인만 볼 수 있는 안전한 개인 아카이브로 보관됩니다.
+            <span className="my-custom-btn-badge">
+              {weeklyGoal.type === 'custom' ? '수정하기' : '작성하기'}
+            </span>
+          </button>
+          <p className="my-goal-helper-note">
+            ※ 체중이나 외모 변화가 아니라 쉬는 시간 물 마시기, 10분 걷기 등 실천 가능한 행동 중심으로 정해보세요 (최대 30자)
           </p>
+        </div>
+
+        {/* 3. 주간 실천 횟수 설정 */}
+        <div className="my-goal-sub-section">
+          <div className="my-goal-sub-header">
+            <span className="my-goal-sub-label">📅 일주일에 몇 번 실천할까요?</span>
+            <span className="my-goal-sub-hint">작게 시작해서 꾸준히</span>
+          </div>
+          <div className="goal-preset-buttons">
+            {[2, 3, 5].map((days) => {
+              const isSelected = currentTargetDays === days;
+              return (
+                <button
+                  key={days}
+                  type="button"
+                  className={`goal-preset-btn ${isSelected ? 'active' : ''}`}
+                  onClick={() =>
+                    onUpdateWeeklyGoal?.({
+                      targetDays: days,
+                    })
+                  }
+                >
+                  {isSelected && <Check size={14} strokeWidth={3} />}
+                  <span>
+                    {days}일 {days === 3 ? '(추천)' : ''}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -472,6 +538,17 @@ export const MyScreen: React.FC<MyScreenProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {/* Weekly Goal Edit Modal */}
+      {showGoalModal && (
+        <WeeklyGoalEditModal
+          isOpen
+          onClose={() => setShowGoalModal(false)}
+          currentGoal={weeklyGoal}
+          onSave={(updated) => onUpdateWeeklyGoal?.(updated)}
+          initialMode={goalModalMode}
+        />
       )}
     </div>
   );

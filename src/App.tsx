@@ -9,6 +9,7 @@ import { TempHomeScreen } from './components/TempHomeScreen';
 import { AdminLayout } from './components/admin/AdminLayout';
 import type { OnboardingState, UserType, CharacterId, SchoolType, UserRole } from './types/onboarding';
 import { calculateLevelInfo } from './utils/seedRules';
+import { ensureWeeklyGoal } from './utils/weeklyGoalUtils';
 
 const STORAGE_KEY = 'healseed_onboarding_data_v3';
 
@@ -26,13 +27,7 @@ const initialDefaultState: OnboardingState = {
   level: 1,
   dailyRecords: {},
   mealRecords: {},
-  weeklyGoal: {
-    habitKey: 'water',
-    habitName: '물 자주 마시기',
-    targetDays: 3,
-    targetSeed: 15,
-    title: '물 자주 마시기',
-  },
+  weeklyGoal: ensureWeeklyGoal(),
 };
 
 export const App: React.FC = () => {
@@ -52,13 +47,7 @@ export const App: React.FC = () => {
           level,
           dailyRecords: parsed.dailyRecords || {},
           mealRecords: parsed.mealRecords || {},
-          weeklyGoal: {
-            habitKey: parsed.weeklyGoal?.habitKey || 'water',
-            habitName: parsed.weeklyGoal?.habitName || '물 자주 마시기',
-            targetDays: parsed.weeklyGoal?.targetDays || 3,
-            targetSeed: parsed.weeklyGoal?.targetSeed || 15,
-            title: parsed.weeklyGoal?.title || '물 자주 마시기',
-          },
+          weeklyGoal: ensureWeeklyGoal(parsed.weeklyGoal),
         };
       }
     } catch {

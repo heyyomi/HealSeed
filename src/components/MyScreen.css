@@ -666,7 +666,7 @@
   padding: 18px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 
@@ -688,7 +688,6 @@
   height: 38px;
   border-radius: 50%;
   background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
-  color: #16A34A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -697,7 +696,7 @@
 
 .goal-main-title {
   display: block;
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 800;
   color: #1E293B;
 }
@@ -706,29 +705,165 @@
   display: block;
   font-size: 11.5px;
   color: #64748B;
+  margin-top: 1px;
 }
 
-.goal-current-badge {
-  background-color: #F0FDF4;
-  color: #15803D;
-  border: 1px solid #86EFAC;
-  padding: 4px 10px;
+.my-goal-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background-color: #F8FAFC;
+  border: 1px solid #CBD5E1;
   border-radius: var(--radius-pill);
   font-size: 11.5px;
   font-weight: 700;
-  white-space: nowrap;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
+.my-goal-edit-btn:hover {
+  background-color: #F0FDF4;
+  border-color: #86EFAC;
+  color: #15803D;
+}
+
+/* Status Banner */
+.my-goal-status-banner {
+  background: linear-gradient(135deg, #F0FDF4 0%, #F8FAFC 100%);
+  border: 1.5px solid #BBF7D0;
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.my-goal-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.my-goal-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.my-goal-icon-badge {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.my-goal-active-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #15803D;
+}
+
+.my-goal-type-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.my-goal-type-pill.preset {
+  background-color: #DCFCE7;
+  color: #166534;
+  border: 1px solid #86EFAC;
+}
+
+.my-goal-type-pill.custom {
+  background-color: #E0E7FF;
+  color: #3730A3;
+  border: 1px solid #C7D2FE;
+}
+
+.my-goal-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px dashed #DCFCE7;
+}
+
+.my-goal-target-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.my-goal-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.my-goal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #CBD5E1;
+  background-color: #FFFFFF;
+  transition: all 0.2s ease;
+}
+
+.my-goal-dot.filled {
+  background-color: #16A34A;
+  border-color: #16A34A;
+  box-shadow: 0 0 6px rgba(22, 163, 74, 0.4);
+}
+
+.my-goal-count-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  margin-left: auto;
+}
+
+.my-goal-count-label strong {
+  color: #16A34A;
+  font-size: 13.5px;
+}
+
+.my-goal-tip-box {
+  font-size: 11.5px;
+  color: #166534;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  line-height: 1.4;
+}
+
+/* Sub-sections */
 .my-goal-sub-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.my-goal-sub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .my-goal-sub-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #475569;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #334155;
+}
+
+.my-goal-sub-hint {
+  font-size: 11px;
+  color: #94A3B8;
 }
 
 .goal-habit-choice-grid {
@@ -752,6 +887,16 @@
   transition: all 0.15s ease;
 }
 
+.habit-chip-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.habit-chip-icon {
+  font-size: 15px;
+}
+
 .habit-select-chip:hover {
   background-color: #F0FDF4;
   border-color: #86EFAC;
@@ -759,11 +904,74 @@
 
 .habit-select-chip.active {
   background-color: #DCFCE7;
-  border-color: #22C55E;
+  border-color: #16A34A;
   color: #15803D;
   font-weight: 800;
+  box-shadow: 0 1px 3px rgba(22, 163, 74, 0.15);
 }
 
+.habit-check-icon {
+  color: #16A34A;
+  flex-shrink: 0;
+}
+
+/* Custom Goal Button in MY */
+.my-custom-goal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 14px;
+  background-color: #F8FAFC;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.my-custom-goal-btn:hover {
+  background-color: #F0FDF4;
+  border-color: #16A34A;
+  color: #15803D;
+}
+
+.my-custom-goal-btn.active {
+  background-color: #F0FDF4;
+  border: 1.5px solid #16A34A;
+  color: #15803D;
+}
+
+.my-custom-btn-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-custom-btn-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: #16A34A;
+  background-color: #DCFCE7;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+}
+
+.my-goal-helper-note {
+  font-size: 11px;
+  color: #64748B;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Days Presets */
 .goal-preset-buttons {
   display: flex;
   gap: 8px;
