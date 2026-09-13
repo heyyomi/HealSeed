@@ -153,42 +153,46 @@
   color: #047857;
 }
 
-.meal-date-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--primary-700);
-}
-
-/* Menu Chips Grid (3 cols or 2 cols) */
+/* Menu Chips Grid: 2 columns for perfect mobile fit without squeezing */
 .meal-menu-preview-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
 }
 
 .menu-preview-chip {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background-color: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  padding: 8px 10px;
+  border: 1.5px solid #E2E8F0;
+  padding: 9px 12px;
   border-radius: var(--radius-md);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  min-width: 0;
+  overflow: hidden;
+  transition: all var(--transition-bounce);
+}
+
+.menu-preview-chip:hover {
+  border-color: #86EFAC;
+  background-color: #F0FDF4;
 }
 
 .menu-item-icon {
-  font-size: 15px;
+  font-size: 16px;
   flex-shrink: 0;
 }
 
 .menu-item-text {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 /* Footer */

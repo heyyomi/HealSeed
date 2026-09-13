@@ -141,6 +141,7 @@ function parseDishes(dishRaw: string): { menu: string[]; allergyList: string[] }
       .replace(/\(?[\d.]+\)?/g, '')
       .replace(/\((중|석|초|고)\)/g, '')
       .replace(/&amp;/g, '&')
+      .replace(/[\*\/\#]+$/g, '')
       .trim();
 
     if (cleanName && !menu.includes(cleanName)) {
