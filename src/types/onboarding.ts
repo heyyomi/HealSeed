@@ -79,6 +79,15 @@ export interface MovementRecord {
   completedAt: string;
 }
 
+export interface MindCareRecord {
+  date: string;
+  chapterId: string;
+  chapterName: string;
+  durationMinutes: number;
+  completed: boolean;
+  completedAt: string;
+}
+
 export interface UserCondition {
   level: 1 | 2 | 3 | 4 | 5;
   label: string;
@@ -100,6 +109,8 @@ export interface DailyRecord {
   movementRecord?: MovementRecord;
   // Today's Condition
   condition?: UserCondition;
+  // Short guided mind-care practice
+  mindCareRecord?: MindCareRecord;
 }
 
 export interface UserProfile {

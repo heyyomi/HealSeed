@@ -2303,3 +2303,22 @@
   color: #7a8983;
   font-size: 9.5px;
 }
+.bottom-nav-bar .nav-tab-item {
+  min-width: 0;
+  font-size: 10px;
+}
+
+@media (max-width: 370px) {
+  .bottom-nav-bar {
+    padding-inline: 2px;
+  }
+
+  .bottom-nav-bar .nav-tab-item {
+    font-size: 9px;
+  }
+
+  .bottom-nav-bar .nav-tab-item svg {
+    width: 20px;
+    height: 20px;
+  }
+}

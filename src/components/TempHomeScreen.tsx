@@ -31,6 +31,7 @@ import { getRandomHealthQuote } from '../data/greetingQuotes';
 import { TodayMealCard } from './TodayMealCard';
 import { MealScreen } from './MealScreen';
 import { MovementScreen } from './MovementScreen';
+import { MindCareScreen } from './MindCareScreen';
 import { TogetherScreen } from './TogetherScreen';
 import { MyScreen } from './MyScreen';
 import { CharacterGrowthImage } from './common/CharacterGrowthImage';
@@ -51,7 +52,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
   onUpdateState,
   onReset,
 }) => {
-  const [activeTab, setActiveTab] = useState<'home' | 'meal' | 'movement' | 'together' | 'my'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'meal' | 'movement' | 'mind' | 'together' | 'my'>('home');
   const [currentDateString, setCurrentDateString] = useState<string>(getFormattedDate());
   const [currentMeal, setCurrentMeal] = useState<MealData | null>(null);
   const [mealsArchive, setMealsArchive] = useState<Record<string, MealData>>({});
@@ -536,6 +537,52 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
     setTimeout(() => setToastMessage(null), 2500);
   };
 
+  const handleSaveMindCareRecord = (record: {
+    date: string;
+    chapterId: string;
+    chapterName: string;
+    durationMinutes: number;
+  }) => {
+    onUpdateState((prev) => {
+      const previous = prev.dailyRecords[record.date] || {
+        date: record.date, balancedMeal: false, water: false, activity: false,
+        mindCare: false, slowEating: false, listenToBody: false,
+      };
+      const wasAlreadyDone = previous.mindCare;
+      const nextSeed = wasAlreadyDone ? prev.seed : prev.seed + 1;
+      const currentGoal = ensureWeeklyGoal(prev.weeklyGoal);
+      const nextGoal = currentGoal.type === 'preset'
+        && currentGoal.habitType === 'mind'
+        && !currentGoal.completedDates.includes(record.date)
+        ? { ...currentGoal, completedDates: [...currentGoal.completedDates, record.date] }
+        : currentGoal;
+
+      return {
+        ...prev,
+        seed: nextSeed,
+        level: calculateLevelInfo(nextSeed).level,
+        weeklyGoal: nextGoal,
+        dailyRecords: {
+          ...prev.dailyRecords,
+          [record.date]: {
+            ...previous,
+            mindCare: true,
+            mindCareRecord: {
+              ...record,
+              completed: true,
+              completedAt: new Date().toISOString(),
+            },
+          },
+        },
+      };
+    });
+    setToastMessage({
+      title: todayRecord.mindCare ? '마음돌봄 기록 업데이트 💜' : '+1 Seed 🌱',
+      subtitle: `${record.chapterName} ${record.durationMinutes}분을 기록했어요.`,
+    });
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
   return (
     <div className="home-screen-wrapper">
       {/* Top App Bar */}
@@ -734,7 +781,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
               <button type="button" onClick={() => setActiveTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '실천 완료' : '기록하기'}</b></button>
               <button type="button" className={todayRecord.water ? 'done' : ''} onClick={() => handleToggleHabit('water', true)}><Droplets /><span>물 마시기</span><b>{todayRecord.water ? '완료' : '+1 Seed'}</b></button>
               <button type="button" onClick={() => setActiveTab('movement')}><Activity /><span>오늘의 운동</span><b>{todayRecord.movementRecord ? `${todayRecord.movementRecord.durationMinutes}분` : '시작하기'}</b></button>
-              <button type="button" className={todayRecord.mindCare ? 'done' : ''} onClick={() => handleToggleHabit('mindCare', true)}><Heart /><span>마음 돌보기</span><b>{todayRecord.mindCare ? '완료' : '+1 Seed'}</b></button>
+              <button type="button" className={todayRecord.mindCare ? 'done' : ''} onClick={() => setActiveTab('mind')}><Heart /><span>마음 돌보기</span><b>{todayRecord.mindCare ? '완료' : '시작하기'}</b></button>
             </div>
           </section>
 
@@ -1213,6 +1260,18 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
         />
       )}
 
+      {activeTab === 'mind' && (
+        <MindCareScreen
+          key={currentDateString}
+          date={currentDateString}
+          dailyRecord={todayRecord}
+          dailyRecords={data.dailyRecords}
+          onShiftDate={handleShiftDate}
+          onSelectDate={setCurrentDateString}
+          onComplete={handleSaveMindCareRecord}
+        />
+      )}
+
       {/* TOGETHER TAB (2순위) */}
       {activeTab === 'together' && (
         <TogetherScreen data={data} />
@@ -1228,7 +1287,7 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
         />
       )}
 
-      {/* Bottom 5 Tabs Navigation */}
+      {/* Bottom 6 Tabs Navigation */}
       <nav className="bottom-nav-bar" role="navigation" aria-label="메인 네비게이션">
         <button
           className={`nav-tab-item ${activeTab === 'home' ? 'active' : ''}`}
@@ -1258,6 +1317,15 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
         >
           <Activity size={22} />
           <span>운동</span>
+        </button>
+
+        <button
+          className={`nav-tab-item ${activeTab === 'mind' ? 'active' : ''}`}
+          onClick={() => setActiveTab('mind')}
+          id="tab-mind"
+        >
+          <Heart size={22} />
+          <span>마음</span>
         </button>
 
         <button
