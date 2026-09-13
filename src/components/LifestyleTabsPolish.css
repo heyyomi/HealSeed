@@ -138,6 +138,206 @@
   background: #fffaf0;
 }
 
+.meal-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.meal-menu-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.meal-menu-item > span {
+  flex-shrink: 0;
+  font-size: 23px;
+}
+
+.meal-menu-item > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.meal-menu-item small {
+  color: var(--text-tertiary);
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.meal-menu-item strong {
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.source-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.nutrition-card {
+  background: linear-gradient(180deg, #fff, #f8fafc);
+}
+
+.nutrition-core-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nutrition-core-grid > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 68px;
+  padding: 9px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.nutrition-core-grid > div.calorie {
+  border-color: #fde68a;
+  background: linear-gradient(180deg, #fffbeb, #fff);
+}
+
+.nutrition-core-grid span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.nutrition-core-grid .calorie span,
+.nutrition-core-grid .calorie strong {
+  color: #b45309;
+}
+
+.nutrition-core-grid strong {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.nutrition-empty {
+  grid-column: 1 / -1;
+  padding: 10px 0;
+  color: #64748b;
+  font-size: 12px;
+  text-align: center;
+}
+
+.nutrition-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.nutrition-more > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-pill);
+  color: #475569;
+  background: #f1f5f9;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.nutrition-chip-list {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+}
+
+.nutrition-chip-list > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-pill);
+  background: #fff;
+}
+
+.nutrition-chip-list small {
+  color: #64748b;
+  font-size: 10.5px;
+}
+
+.nutrition-chip-list strong {
+  color: #15803d;
+  font-size: 11px;
+}
+
+.meal-allergy-box {
+  margin-top: 10px;
+}
+
+.meal-allergy-box > button {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  color: #92400e;
+  background: #fffbeb;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.meal-allergy-box > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+  padding: 10px;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.meal-allergy-box > div > span {
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  color: #b45309;
+  background: #fef3c7;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.meal-allergy-box p {
+  color: #64748b;
+  font-size: 11.5px;
+}
+
 .meal-habit-list {
   gap: 9px;
 }
@@ -237,5 +437,9 @@
   .lifestyle-screen.meal-lifestyle-screen,
   .lifestyle-screen.movement-lifestyle-screen {
     padding-inline: 16px;
+  }
+
+  .meal-menu-grid {
+    grid-template-columns: 1fr;
   }
 }
