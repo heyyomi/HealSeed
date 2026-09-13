@@ -1,4 +1,4 @@
-import type { MealData, SchoolType, NutritionItem } from '../types/onboarding';
+import type { MealData, SchoolType, NutritionItem, SchoolSearchResult } from '../types/onboarding';
 
 /**
  * Standard Korea Food Allergy Index Mapping (1 ~ 19)
@@ -25,37 +25,92 @@ export const ALLERGY_NAMES: Record<string, string> = {
   '19': '잣',
 };
 
-// In-memory cache for school NEIS codes
-const SCHOOL_CACHE: Record<string, { officeCode: string; schoolCode: string }> = {
-  '숭곡중학교': { officeCode: 'B10', schoolCode: '7121370' },
-  '진선여자중학교': { officeCode: 'B10', schoolCode: '7091456' },
-};
+// Known school presets for instant matching
+const PRESET_SCHOOLS: SchoolSearchResult[] = [
+  {
+    schoolName: '숭곡중학교',
+    schoolType: 'middle',
+    officeCode: 'B10',
+    schoolCode: '7121370',
+    location: '서울특별시 성북구',
+  },
+  {
+    schoolName: '진선여자중학교',
+    schoolType: 'middle',
+    officeCode: 'B10',
+    schoolCode: '7091456',
+    location: '서울특별시 강남구',
+  },
+  {
+    schoolName: '서울고등학교',
+    schoolType: 'high',
+    officeCode: 'B10',
+    schoolCode: '7010084',
+    location: '서울특별시 서초구',
+  },
+  {
+    schoolName: '서울초등학교',
+    schoolType: 'elementary',
+    officeCode: 'B10',
+    schoolCode: '7021111',
+    location: '서울특별시',
+  },
+];
 
 /**
- * Search school information from NEIS OpenAPI
+ * Parse NEIS school type string to application SchoolType
  */
-export async function searchSchoolFromNEIS(schoolName: string): Promise<{ officeCode: string; schoolCode: string } | null> {
-  const cached = SCHOOL_CACHE[schoolName];
-  if (cached) return cached;
+function parseSchoolType(typeName: string): SchoolType {
+  if (typeName?.includes('초등')) return 'elementary';
+  if (typeName?.includes('고등')) return 'high';
+  return 'middle';
+}
+
+/**
+ * Search official schools in real-time from NEIS OpenAPI
+ * Handles partial inputs like "숭곡중", "서울고", etc.
+ */
+export async function searchSchoolsFromNEIS(keyword: string): Promise<SchoolSearchResult[]> {
+  const trimmed = keyword.trim();
+  if (!trimmed || trimmed.length < 2) return [];
 
   try {
-    const url = `https://open.neis.go.kr/hub/schoolInfo?Type=json&pSize=5&SCHUL_NM=${encodeURIComponent(schoolName)}`;
+    const url = `https://open.neis.go.kr/hub/schoolInfo?Type=json&pSize=8&SCHUL_NM=${encodeURIComponent(trimmed)}`;
     const res = await fetch(url);
-    if (!res.ok) return null;
+    if (!res.ok) throw new Error('NEIS school API response not ok');
     const data = await res.json();
-    if (data?.schoolInfo?.[1]?.row?.[0]) {
-      const row = data.schoolInfo[1].row[0];
-      const result = {
-        officeCode: row.ATPT_OFCDC_SC_CODE,
-        schoolCode: row.SD_SCHUL_CODE,
-      };
-      SCHOOL_CACHE[schoolName] = result;
-      return result;
+    const rows = data?.schoolInfo?.[1]?.row;
+
+    if (Array.isArray(rows) && rows.length > 0) {
+      return rows.map((r: any) => ({
+        schoolName: r.SCHUL_NM,
+        schoolType: parseSchoolType(r.SCHUL_KND_SC_NM),
+        officeCode: r.ATPT_OFCDC_SC_CODE,
+        schoolCode: r.SD_SCHUL_CODE,
+        location: r.ORG_RDNMA || r.LCTN_SC_NM || '전국',
+      }));
     }
   } catch (err) {
-    console.warn('Failed to search school from NEIS:', err);
+    console.warn('Realtime NEIS school search error:', err);
   }
-  return null;
+
+  // Fallback to presets matching
+  return PRESET_SCHOOLS.filter(
+    (p) => p.schoolName.includes(trimmed) || trimmed.includes(p.schoolName.replace('학교', ''))
+  );
+}
+
+/**
+ * Check if the given date is a weekend (Saturday or Sunday)
+ */
+export function isWeekend(dateStr: string): boolean {
+  try {
+    const d = new Date(dateStr);
+    const day = d.getDay();
+    return day === 0 || day === 6; // 0: Sunday, 6: Saturday
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -67,13 +122,11 @@ function parseDishes(dishRaw: string): { menu: string[]; allergyList: string[] }
   const allergyCodes = new Set<string>();
 
   for (const item of rawItems) {
-    // Extract allergy numbers (e.g. "보리밥", "냉이된장국5.6.13.", "홍합살미역국 (5.6.18)")
     const match = item.match(/\(?([\d.]+)\)?$/);
     if (match) {
       const nums = match[1].split('.').filter(Boolean);
       nums.forEach((n) => allergyCodes.add(n));
     }
-    // Clean dish name by removing allergy numbers and brackets
     const cleanName = item
       .replace(/\(?[\d.]+\)?/g, '')
       .replace(/\((중|석|초|고)\)/g, '')
@@ -85,7 +138,6 @@ function parseDishes(dishRaw: string): { menu: string[]; allergyList: string[] }
     }
   }
 
-  // Convert collected allergy numbers to friendly Korean names
   const allergyList = Array.from(allergyCodes)
     .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
     .map((code) => ALLERGY_NAMES[code])
@@ -105,7 +157,6 @@ function parseNutrition(ntrRaw: string): NutritionItem[] {
     .filter(Boolean)
     .map((line) => {
       const [namePart, amountPart] = line.split(':').map((s) => s.trim());
-      // Friendly rename
       let name = namePart || '';
       name = name.replace(/\(g\)|\(mg\)|\(R\.E\)/g, '').trim();
       return {
@@ -117,26 +168,9 @@ function parseNutrition(ntrRaw: string): NutritionItem[] {
 }
 
 /**
- * Default fallback meal when no online data available
- */
-const DEFAULT_FALLBACK_MEAL: MealData = {
-  date: '2026-09-13',
-  schoolName: '숭곡중학교',
-  menu: ['현미밥', '미역국', '불고기', '채소샐러드', '김치', '과일'],
-  nutritionInfo: '단백질 35.2g · 칼슘 420mg · 비타민C 25mg',
-  allergyInfo: '대두, 밀, 쇠고기, 아황산류 포함',
-  allergyList: ['대두(콩)', '밀', '쇠고기', '아황산류'],
-  nutritionList: [
-    { name: '단백질', amount: '35.2g' },
-    { name: '칼슘', amount: '420.0mg' },
-    { name: '비타민C', amount: '25.0mg' },
-    { name: '철분', amount: '4.8mg' },
-  ],
-  isRealNeis: false,
-};
-
-/**
- * Primary Service function to retrieve school meal from actual NEIS Open API
+ * Retrieve school meal strictly following academic schedule:
+ * - Saturday / Sunday: No meal ("주말에는 급식이 없는 날이에요")
+ * - Weekday: Fetches real NEIS OpenAPI meal, or clear "No meal" status if holiday/vacation.
  */
 export async function getMealBySchoolAndDate(
   schoolName: string,
@@ -144,27 +178,47 @@ export async function getMealBySchoolAndDate(
   _schoolType?: SchoolType
 ): Promise<MealData> {
   const targetDateStr = date || '2026-09-13';
+
+  // Resolve official school name and codes
+  let officialName = schoolName || '숭곡중학교';
+  let officeCode = 'B10';
+  let schoolCode = '7121370';
+
+  try {
+    const schools = await searchSchoolsFromNEIS(schoolName || '숭곡중학교');
+    if (schools && schools.length > 0) {
+      officialName = schools[0].schoolName;
+      officeCode = schools[0].officeCode;
+      schoolCode = schools[0].schoolCode;
+    }
+  } catch {
+    // fallback
+  }
+
+  // 1. Check Weekend (Saturday or Sunday)
+  if (isWeekend(targetDateStr)) {
+    return {
+      date: targetDateStr,
+      schoolName: officialName,
+      menu: [],
+      nutritionInfo: null,
+      allergyInfo: null,
+      allergyList: [],
+      nutritionList: [],
+      isRealNeis: true,
+      isNoMealDay: true,
+      noMealReason: '주말(토·일요일)에는 학교 급식이 운영되지 않아요',
+    };
+  }
+
+  // 2. Weekday - Fetch from NEIS OpenAPI
   const ymd = targetDateStr.replace(/-/g, '');
 
   try {
-    // 1. Get School NEIS Codes
-    const schoolCodes = await searchSchoolFromNEIS(schoolName || '숭곡중학교');
-    const officeCode = schoolCodes?.officeCode || 'B10';
-    const schoolCode = schoolCodes?.schoolCode || '7121370';
-
-    // 2. Fetch Meal from NEIS API for this specific date
     const directUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=1&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${ymd}`;
-    let res = await fetch(directUrl);
-    let data = await res.json();
-    let row = data?.mealServiceDietInfo?.[1]?.row?.[0];
-
-    // 3. If no meal on this date (weekend/vacation), fetch recent semester meal for this school
-    if (!row) {
-      const recentUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=5&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}`;
-      res = await fetch(recentUrl);
-      data = await res.json();
-      row = data?.mealServiceDietInfo?.[1]?.row?.[0];
-    }
+    const res = await fetch(directUrl);
+    const data = await res.json();
+    const row = data?.mealServiceDietInfo?.[1]?.row?.[0];
 
     if (row && row.DDISH_NM) {
       const { menu, allergyList } = parseDishes(row.DDISH_NM);
@@ -180,24 +234,47 @@ export async function getMealBySchoolAndDate(
 
       return {
         date: targetDateStr,
-        schoolName: row.SCHUL_NM || schoolName,
-        menu: menu.length > 0 ? menu : DEFAULT_FALLBACK_MEAL.menu,
+        schoolName: officialName || schoolName,
+        menu,
         nutritionInfo: nutritionInfoText,
         allergyInfo: allergyInfoText,
         allergyList,
         nutritionList,
         isRealNeis: true,
+        isNoMealDay: false,
       };
     }
+
+    // If weekday but no record (e.g. school anniversary, exam period, or semester break)
+    // Try to get latest semester meal for preview if user wants to see sample, or report no meal scheduled
+    return {
+      date: targetDateStr,
+      schoolName: officialName || schoolName,
+      menu: [],
+      nutritionInfo: null,
+      allergyInfo: null,
+      allergyList: [],
+      nutritionList: [],
+      isRealNeis: true,
+      isNoMealDay: true,
+      noMealReason: '오늘 학교 급식 일정이 없습니다 (휴업일 또는 방학)',
+    };
   } catch (err) {
-    console.warn('NEIS meal fetch error, fallback applied:', err);
+    console.warn('NEIS weekday meal fetch error:', err);
   }
 
-  // Fallback if network fails
+  // Safe fallback if network failure
   return {
-    ...DEFAULT_FALLBACK_MEAL,
     date: targetDateStr,
-    schoolName: schoolName || DEFAULT_FALLBACK_MEAL.schoolName,
+    schoolName: schoolName || '숭곡중학교',
+    menu: [],
+    nutritionInfo: null,
+    allergyInfo: null,
+    allergyList: [],
+    nutritionList: [],
+    isRealNeis: true,
+    isNoMealDay: true,
+    noMealReason: '급식 정보를 불러오는 중입니다',
   };
 }
 

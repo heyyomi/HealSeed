@@ -42,6 +42,95 @@
   border-radius: var(--radius-pill);
 }
 
+.neis-live-badge-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
+  color: #15803D;
+  border: 1px solid #86EFAC;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 1px 3px rgba(34, 197, 94, 0.15);
+  letter-spacing: -0.2px;
+}
+
+.neis-live-badge-card .shield-icon {
+  color: #16A34A;
+}
+
+/* Weekend / Holiday No-Meal Card Body */
+.today-no-meal-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+  border: 1.5px dashed #CBD5E1;
+  border-radius: var(--radius-lg);
+  padding: 14px 14px;
+}
+
+.today-no-meal-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.no-meal-emoji-badge {
+  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+}
+
+.no-meal-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.no-meal-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.no-meal-desc {
+  font-size: 12px;
+  color: #64748B;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.no-meal-weekend-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+}
+
+.no-meal-weekend-tip .tip-emoji {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.no-meal-weekend-tip .tip-text {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #047857;
+}
+
 .meal-date-label {
   font-size: 12px;
   font-weight: 700;

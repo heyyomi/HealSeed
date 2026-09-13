@@ -47,12 +47,87 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background-color: #DCFCE7;
+  background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
   color: #15803D;
+  border: 1px solid #86EFAC;
   font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
+  font-weight: 800;
+  padding: 3px 9px;
   border-radius: var(--radius-pill);
+  box-shadow: 0 1px 3px rgba(34, 197, 94, 0.15);
+}
+
+/* Detail Screen Weekend / Holiday No-Meal Banner */
+.detail-no-meal-banner {
+  background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+  border: 1.5px solid #CBD5E1;
+  border-radius: var(--radius-xl);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.detail-no-meal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-no-meal-emoji {
+  font-size: 32px;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.detail-no-meal-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-no-meal-main {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.detail-no-meal-sub {
+  font-size: 12.5px;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+.detail-no-meal-box {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.notice-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #047857;
+}
+
+.notice-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.5;
 }
 
 /* 2-Column Dish Cards */

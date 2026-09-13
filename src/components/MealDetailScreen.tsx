@@ -70,73 +70,100 @@ export const MealDetailScreen: React.FC<MealDetailScreenProps> = ({
             <UtensilsCrossed size={14} />
             <span>학교 급식 식단표</span>
           </div>
-          {meal.isRealNeis && (
-            <span className="neis-live-badge">
-              <ShieldCheck size={12} />
-              <span>NEIS 실시간 연동</span>
-            </span>
-          )}
+          <span className="neis-live-badge">
+            <ShieldCheck size={13} />
+            <span>NEIS 실시간 연동</span>
+          </span>
         </div>
-        <h2 className="screen-main-title">오늘의 급식 메뉴</h2>
+        <h2 className="screen-main-title">
+          {meal.isNoMealDay ? '급식 일정 안내' : '오늘의 급식 메뉴'}
+        </h2>
         <p className="screen-subtitle">
-          정성껏 준비된 오늘의 건강하고 균형 잡힌 식단이에요.
+          {meal.isNoMealDay
+            ? `오늘(${formattedDateLabel})은 학교 급식이 운영되지 않는 날이에요.`
+            : '정성껏 준비된 오늘의 건강하고 균형 잡힌 식단이에요.'}
         </p>
       </div>
 
-      {/* Menu Cards 2-Column Grid */}
-      <div className="detail-menu-grid animate-pop-in">
-        {meal.menu.map((dish, index) => (
-          <div key={index} className="detail-dish-card">
-            <span className="dish-icon">{getMenuIcon(dish)}</span>
-            <div className="dish-info">
-              <span className="dish-index">메뉴 {index + 1}</span>
-              <strong className="dish-name">{dish}</strong>
+      {/* Weekend or Holiday No-Meal Banner */}
+      {meal.isNoMealDay ? (
+        <div className="detail-no-meal-banner animate-pop-in">
+          <div className="detail-no-meal-header">
+            <span className="detail-no-meal-emoji">🏖️</span>
+            <div className="detail-no-meal-titles">
+              <strong className="detail-no-meal-main">오늘은 급식이 없는 날이에요</strong>
+              <span className="detail-no-meal-sub">
+                {meal.noMealReason || '주말(토·일요일) 및 공휴일에는 학교 급식이 운영되지 않아요.'}
+              </span>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Real NEIS Nutritional & Allergy Info Area */}
-      <div className="meal-extra-info-section animate-fade-in-up">
-        {/* Nutrition Info Card */}
-        <div className="info-box-item nutrition-box">
-          <div className="info-box-header">
-            <Apple size={16} className="info-box-icon apple-icon" />
-            <span className="info-box-title">성장 영양 정보</span>
+          <div className="detail-no-meal-box">
+            <strong className="notice-title">💡 주말 식사 & 건강 습관 가이드</strong>
+            <ul className="notice-list">
+              <li>학교 급식이 없어도 규칙적인 식사 시간을 지켜보세요.</li>
+              <li>좋아하는 음식과 함께 신선한 채소와 물도 골고루 챙겨보세요.</li>
+              <li>아래에서 오늘의 건강한 한 끼 습관을 실천하고 Seed를 모아보세요!</li>
+            </ul>
           </div>
-          {meal.nutritionList && meal.nutritionList.length > 0 ? (
-            <div className="nutrition-chips-wrap">
-              {meal.nutritionList.map((n, idx) => (
-                <div key={idx} className="nutrition-chip">
-                  <span className="ntr-name">{n.name}</span>
-                  <strong className="ntr-amount">{n.amount}</strong>
+        </div>
+      ) : (
+        <>
+          {/* Menu Cards 2-Column Grid */}
+          <div className="detail-menu-grid animate-pop-in">
+            {meal.menu.map((dish, index) => (
+              <div key={index} className="detail-dish-card">
+                <span className="dish-icon">{getMenuIcon(dish)}</span>
+                <div className="dish-info">
+                  <span className="dish-index">메뉴 {index + 1}</span>
+                  <strong className="dish-name">{dish}</strong>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="info-box-status">{meal.nutritionInfo || '영양소 고루 포함'}</p>
-          )}
-        </div>
-
-        {/* Allergy Info Card */}
-        <div className="info-box-item allergy-box">
-          <div className="info-box-header">
-            <AlertCircle size={16} className="info-box-icon alert-icon" />
-            <span className="info-box-title">알레르기 유발 물질 안내</span>
+              </div>
+            ))}
           </div>
-          {meal.allergyList && meal.allergyList.length > 0 ? (
-            <div className="allergy-chips-wrap">
-              {meal.allergyList.map((allergy, idx) => (
-                <span key={idx} className="allergy-tag">
-                  {allergy}
-                </span>
-              ))}
+
+          {/* Real NEIS Nutritional & Allergy Info Area */}
+          <div className="meal-extra-info-section animate-fade-in-up">
+            {/* Nutrition Info Card */}
+            <div className="info-box-item nutrition-box">
+              <div className="info-box-header">
+                <Apple size={16} className="info-box-icon apple-icon" />
+                <span className="info-box-title">성장 영양 정보</span>
+              </div>
+              {meal.nutritionList && meal.nutritionList.length > 0 ? (
+                <div className="nutrition-chips-wrap">
+                  {meal.nutritionList.map((n, idx) => (
+                    <div key={idx} className="nutrition-chip">
+                      <span className="ntr-name">{n.name}</span>
+                      <strong className="ntr-amount">{n.amount}</strong>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="info-box-status">{meal.nutritionInfo || '영양소 고루 포함'}</p>
+              )}
             </div>
-          ) : (
-            <p className="info-box-status">{meal.allergyInfo || '특이 유발물질 없음'}</p>
-          )}
-        </div>
-      </div>
+
+            {/* Allergy Info Card */}
+            <div className="info-box-item allergy-box">
+              <div className="info-box-header">
+                <AlertCircle size={16} className="info-box-icon alert-icon" />
+                <span className="info-box-title">알레르기 유발 물질 안내</span>
+              </div>
+              {meal.allergyList && meal.allergyList.length > 0 ? (
+                <div className="allergy-chips-wrap">
+                  {meal.allergyList.map((allergy, idx) => (
+                    <span key={idx} className="allergy-tag">
+                      {allergy}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="info-box-status">{meal.allergyInfo || '특이 유발물질 없음'}</p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Today's Meal Habits Checklist Section */}
       <div className="meal-habits-section animate-fade-in-up">

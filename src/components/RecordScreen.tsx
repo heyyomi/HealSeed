@@ -62,7 +62,16 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({
           };
 
           const meal = mealsByDate[dateStr];
-          const mealPreview = meal ? meal.menu.slice(0, 4).join(' · ') + ' 외' : '급식 정보 없음';
+          let mealPreview = '급식 정보 확인 중...';
+          if (meal) {
+            if (meal.isNoMealDay) {
+              mealPreview = '🏖️ 급식 없는 날 (주말/휴업일)';
+            } else if (meal.menu.length > 0) {
+              mealPreview = meal.menu.slice(0, 4).join(' · ') + (meal.menu.length > 4 ? ' 외' : '');
+            } else {
+              mealPreview = '급식 일정 없음';
+            }
+          }
 
           // Calculate earned seed today (4 core habits each gives 1 Seed)
           const earnedSeed =

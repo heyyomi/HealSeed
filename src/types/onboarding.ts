@@ -33,6 +33,14 @@ export interface NutritionItem {
   amount: string;
 }
 
+export interface SchoolSearchResult {
+  schoolName: string;
+  schoolType: SchoolType;
+  officeCode: string;
+  schoolCode: string;
+  location: string;
+}
+
 export interface MealData {
   date: string; // YYYY-MM-DD
   schoolName: string;
@@ -41,7 +49,9 @@ export interface MealData {
   allergyInfo: string | null;
   allergyList?: string[];
   nutritionList?: NutritionItem[];
-  isRealNeis?: boolean;
+  isRealNeis: boolean;
+  isNoMealDay: boolean;
+  noMealReason?: string;
 }
 
 export interface DailyRecord {

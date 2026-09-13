@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
-import { School, User, Sparkles, ChevronRight, Edit3, ShieldCheck, Award } from 'lucide-react';
-import type { OnboardingState, SchoolType } from '../types/onboarding';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  School,
+  User,
+  Sparkles,
+  ChevronRight,
+  Edit3,
+  ShieldCheck,
+  Award,
+  Search,
+  Loader2,
+} from 'lucide-react';
+import type { OnboardingState, SchoolType, SchoolSearchResult } from '../types/onboarding';
 import { CHARACTERS } from '../data/characters';
 import { calculateLevelInfo, getCharacterGrowthImage } from '../utils/seedRules';
+import { searchSchoolsFromNEIS } from '../services/mealService';
 import './MyScreen.css';
 
 interface MyScreenProps {
@@ -17,6 +28,13 @@ const SCHOOL_TYPE_LABELS: Record<SchoolType, string> = {
   high: '고등학교',
 };
 
+const QUICK_PRESETS = [
+  { name: '숭곡중학교', type: 'middle' as SchoolType },
+  { name: '진선여자중학교', type: 'middle' as SchoolType },
+  { name: '서울고등학교', type: 'high' as SchoolType },
+  { name: '서울초등학교', type: 'elementary' as SchoolType },
+];
+
 export const MyScreen: React.FC<MyScreenProps> = ({
   data,
   onUpdateSchool,
@@ -25,17 +43,70 @@ export const MyScreen: React.FC<MyScreenProps> = ({
   const [showEditSchoolModal, setShowEditSchoolModal] = useState(false);
   const [editSchoolName, setEditSchoolName] = useState(data.schoolName);
   const [editSchoolType, setEditSchoolType] = useState<SchoolType>(data.schoolType);
+  const [searchResults, setSearchResults] = useState<SchoolSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const searchTimeoutRef = useRef<any>(null);
+
+  useEffect(() => {
+    const trimmed = editSchoolName.trim();
+    if (!showEditSchoolModal || trimmed.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    setIsSearching(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const list = await searchSchoolsFromNEIS(trimmed);
+        setSearchResults(list);
+        setShowDropdown(list.length > 0);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 280);
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [editSchoolName, showEditSchoolModal]);
 
   const character = CHARACTERS.find((c) => c.id === data.characterId) || CHARACTERS[0];
   const levelInfo = calculateLevelInfo(data.seed);
   const growthImage = getCharacterGrowthImage(character.id, levelInfo.level);
 
-  const handleSaveSchool = (e?: React.FormEvent) => {
+  const handleSelectResult = (item: SchoolSearchResult) => {
+    setEditSchoolName(item.schoolName);
+    setEditSchoolType(item.schoolType);
+    setShowDropdown(false);
+  };
+
+  const handleSaveSchool = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (editSchoolName.trim().length >= 2) {
-      onUpdateSchool(editSchoolName.trim(), editSchoolType);
-      setShowEditSchoolModal(false);
+    const trimmed = editSchoolName.trim();
+    if (trimmed.length < 2) return;
+
+    // Auto-resolve shorthand e.g. "숭곡중"
+    try {
+      const list = await searchSchoolsFromNEIS(trimmed);
+      if (list && list.length > 0) {
+        const matched = list[0];
+        onUpdateSchool(matched.schoolName, matched.schoolType);
+        setShowEditSchoolModal(false);
+        return;
+      }
+    } catch {
+      // fallback
     }
+
+    onUpdateSchool(trimmed, editSchoolType);
+    setShowEditSchoolModal(false);
   };
 
   return (
@@ -128,10 +199,15 @@ export const MyScreen: React.FC<MyScreenProps> = ({
       {showEditSchoolModal && (
         <div className="modal-backdrop" onClick={() => setShowEditSchoolModal(false)}>
           <div className="modal-card animate-pop-in" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-emoji">🏫</div>
+            <div className="modal-header-badge-row">
+              <div className="modal-emoji">🏫</div>
+              <span className="neis-live-badge">
+                <ShieldCheck size={12} /> NEIS 실시간 연동
+              </span>
+            </div>
             <h3 className="modal-title">학교 설정 변경</h3>
             <p className="modal-desc">
-              매일 확인할 학교 급식 기준을 설정해주세요.
+              학교명 또는 약칭(예: 숭곡중)을 입력하면 교육부 NEIS 급식을 연동해요.
             </p>
 
             <form onSubmit={handleSaveSchool} className="edit-school-form">
@@ -148,20 +224,89 @@ export const MyScreen: React.FC<MyScreenProps> = ({
                 ))}
               </div>
 
-              <input
-                type="text"
-                className="edit-school-input"
-                placeholder="예: 숭곡중학교"
-                value={editSchoolName}
-                onChange={(e) => setEditSchoolName(e.target.value)}
-                autoFocus
-              />
+              {/* School Input with NEIS Real-time Search */}
+              <div className="modal-search-box-wrap">
+                <div className="modal-input-row">
+                  <input
+                    type="text"
+                    className="edit-school-input"
+                    placeholder="학교명 검색 (예: 숭곡중)"
+                    value={editSchoolName}
+                    onChange={(e) => {
+                      setEditSchoolName(e.target.value);
+                      setShowDropdown(true);
+                    }}
+                    onFocus={() => {
+                      if (searchResults.length > 0) setShowDropdown(true);
+                    }}
+                    autoFocus
+                  />
+                  {isSearching ? (
+                    <Loader2 size={16} className="modal-search-spinner" />
+                  ) : (
+                    <Search size={16} className="modal-search-icon" />
+                  )}
+                </div>
+
+                {/* Dropdown Results */}
+                {showDropdown && searchResults.length > 0 && (
+                  <div className="modal-dropdown-results animate-pop-in">
+                    <div className="dropdown-results-head">
+                      <span>NEIS 학교 검색 결과</span>
+                      <button
+                        type="button"
+                        className="modal-dropdown-close"
+                        onClick={() => setShowDropdown(false)}
+                      >
+                        닫기
+                      </button>
+                    </div>
+                    <div className="modal-dropdown-items">
+                      {searchResults.map((item, idx) => (
+                        <button
+                          key={`${item.schoolCode}-${idx}`}
+                          type="button"
+                          className="modal-result-btn"
+                          onClick={() => handleSelectResult(item)}
+                        >
+                          <div className="modal-res-top">
+                            <strong>{item.schoolName}</strong>
+                            <span className="modal-res-badge">
+                              {item.schoolType === 'elementary' ? '초등' : item.schoolType === 'middle' ? '중학' : '고등'}
+                            </span>
+                          </div>
+                          <span className="modal-res-loc">{item.location}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Presets */}
+              <div className="modal-quick-presets">
+                <span className="modal-preset-tag">추천:</span>
+                {QUICK_PRESETS.map((p) => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    className={`modal-preset-chip ${editSchoolName === p.name ? 'active' : ''}`}
+                    onClick={() => {
+                      setEditSchoolName(p.name);
+                      setEditSchoolType(p.type);
+                      setShowDropdown(false);
+                    }}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
 
               <div className="modal-btn-row">
                 <button
                   type="submit"
                   className="btn-primary"
-                  disabled={editSchoolName.trim().length < 2}
+                  disabled={editSchoolName.trim().length < 2 || isSearching}
                   id="btn-save-school"
                 >
                   <Sparkles size={16} />
@@ -170,7 +315,10 @@ export const MyScreen: React.FC<MyScreenProps> = ({
                 <button
                   type="button"
                   className="btn-subtle"
-                  onClick={() => setShowEditSchoolModal(false)}
+                  onClick={() => {
+                    setShowDropdown(false);
+                    setShowEditSchoolModal(false);
+                  }}
                 >
                   취소
                 </button>
