@@ -65,10 +65,6 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
   const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
   const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(false);
   const [openLegalDocument, setOpenLegalDocument] = useState<'privacy' | 'terms' | null>(null);
-  const [calendarMonth, setCalendarMonth] = useState(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
-  });
   const [levelUpCelebration, setLevelUpCelebration] = useState<{
     prevLevel: number;
     newLevel: number;
@@ -132,22 +128,6 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
 
   const isAllCompletedToday = completedTodayCount === 4;
   const todayWaterCups = Math.min(5, Math.max(0, todayRecord.waterCups ?? (todayRecord.water ? 5 : 0)));
-  const calendarYear = calendarMonth.getFullYear();
-  const calendarMonthIndex = calendarMonth.getMonth();
-  const calendarDays = new Date(calendarYear, calendarMonthIndex + 1, 0).getDate();
-  const calendarStartDay = new Date(calendarYear, calendarMonthIndex, 1).getDay();
-  const calendarEntries = Array.from({ length: calendarStartDay + calendarDays }, (_, index) => {
-    if (index < calendarStartDay) return null;
-    const day = index - calendarStartDay + 1;
-    const date = new Date(calendarYear, calendarMonthIndex, day);
-    const key = getFormattedDate(date);
-    const record = data.dailyRecords[key];
-    const count = record
-      ? Number(record.balancedMeal) + Number(record.water) + Number(record.activity) + Number(record.mindCare)
-      : 0;
-    return { day, key, count, isFuture: key > getFormattedDate(), isToday: key === getFormattedDate() };
-  });
-  const completedCalendarDays = calendarEntries.filter((entry) => entry && !entry.isFuture && entry.count > 0).length;
 
   // Watch for Level-Up moment to trigger gentle celebratory modal (Section 11)
   const prevLevelRef = useRef<number>(levelInfo.level);
@@ -839,48 +819,14 @@ export const TempHomeScreen: React.FC<TempHomeScreenProps> = ({
               <div className="home-condition-options">{CONDITION_OPTIONS.map((option) => <button key={option.level} type="button" className={todayRecord.condition?.level === option.level ? 'selected' : ''} onClick={() => handleSelectCondition(option)} aria-label={option.label} aria-pressed={todayRecord.condition?.level === option.level}><span>{option.emoji}</span><small>{option.label}</small></button>)}</div>
             </div>
             <div className="home-summary-grid">
-              <button type="button" className="meal-summary-card" onClick={() => setActiveTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '실천 완료' : '기록하기'}</b></button>
               <div id="home-water-tracker" className={`home-water-cup-card ${todayRecord.water ? 'done' : ''}`}>
                 <div className="water-cup-heading"><Droplets /><span><strong>물 마시기</strong><small>{todayWaterCups}/5컵 · 5컵 완료 시 +1 Seed</small></span><b>{todayRecord.water ? '완료' : `${todayWaterCups}컵`}</b></div>
                 <div className="water-cup-buttons">{[1, 2, 3, 4, 5].map((cup) => <button key={cup} type="button" className={cup <= todayWaterCups ? 'filled' : ''} onClick={() => handleSetWaterCups(cup)} aria-label={`물 ${cup}컵 기록`} aria-pressed={cup <= todayWaterCups}><GlassWater size={21} /><small>{cup}</small></button>)}</div>
               </div>
-              <button type="button" onClick={() => setActiveTab('movement')}><Activity /><span>오늘의 운동</span><b>{todayRecord.movementRecord ? `${todayRecord.movementRecord.durationMinutes}분` : '시작하기'}</b></button>
-              <button type="button" className={todayRecord.mindCareRecord?.completed ? 'done' : ''} onClick={() => setActiveTab('mind')}><Heart /><span>마음 돌보기</span><b>{todayRecord.mindCareRecord?.completed ? '실천 완료' : '시작하기'}</b></button>
+              <button type="button" className="home-compact-action" onClick={() => setActiveTab('meal')}><Utensils /><span>급식·한 끼</span><b>{todayRecord.balancedMeal ? '완료' : '기록하기'}</b></button>
+              <button type="button" className="home-compact-action" onClick={() => setActiveTab('movement')}><Activity /><span>운동</span><b>{todayRecord.movementRecord ? `${todayRecord.movementRecord.durationMinutes}분` : '시작하기'}</b></button>
+              <button type="button" className={`home-compact-action ${todayRecord.mindCareRecord?.completed ? 'done' : ''}`} onClick={() => setActiveTab('mind')}><Heart /><span>마음돌봄</span><b>{todayRecord.mindCareRecord?.completed ? '완료' : '시작하기'}</b></button>
             </div>
-          </section>
-
-          <section className="home-week-chart animate-fade-in-up">
-            <div className="home-week-chart-heading"><h3>최근 7일 실천 흐름</h3><span>하루 최대 4가지</span></div>
-            <div className="home-week-bars">
-              {Array.from({ length: 7 }, (_, index) => {
-                const value = new Date(); value.setDate(value.getDate() - (6 - index));
-                const key = getFormattedDate(value);
-                const record = data.dailyRecords[key];
-                const count = record ? Number(record.balancedMeal) + Number(record.water) + Number(record.activity) + Number(record.mindCare) : 0;
-                return <div key={key}><span className="week-bar-track"><i style={{ height: `${Math.max(8, count * 25)}%` }} /></span><b>{['일','월','화','수','목','금','토'][value.getDay()]}</b><small>{count}</small></div>;
-              })}
-            </div>
-          </section>
-
-          <section className="home-month-calendar animate-fade-in-up">
-            <div className="month-calendar-header">
-              <div><span>월간 건강습관</span><h3>한 달 실천 달성 현황</h3></div>
-              <div className="month-calendar-nav">
-                <button type="button" onClick={() => setCalendarMonth(new Date(calendarYear, calendarMonthIndex - 1, 1))} aria-label="이전 달"><ChevronLeft size={17} /></button>
-                <strong>{calendarYear}년 {calendarMonthIndex + 1}월</strong>
-                <button type="button" onClick={() => setCalendarMonth(new Date(calendarYear, calendarMonthIndex + 1, 1))} aria-label="다음 달"><ChevronRight size={17} /></button>
-              </div>
-            </div>
-            <div className="month-calendar-summary"><strong>{completedCalendarDays}일</strong><span>건강습관을 하나 이상 실천했어요</span></div>
-            <div className="month-calendar-weekdays">{['일','월','화','수','목','금','토'].map((day) => <span key={day}>{day}</span>)}</div>
-            <div className="month-calendar-grid">
-              {calendarEntries.map((entry, index) => entry ? (
-                <div key={entry.key} className={`${entry.isToday ? 'today' : ''} ${entry.isFuture ? 'future' : ''}`} title={`${entry.key}: ${entry.count}/4 실천`}>
-                  <span>{entry.day}</span><i data-count={entry.isFuture ? 0 : entry.count} />
-                </div>
-              ) : <div key={`empty-${index}`} className="empty" />)}
-            </div>
-            <div className="month-calendar-legend"><span><i data-count="0" /> 미기록</span><span><i data-count="1" /> 1~2개</span><span><i data-count="3" /> 3개</span><span><i data-count="4" /> 모두 완료</span></div>
           </section>
 
           <div className="legacy-home-details" aria-hidden="true">

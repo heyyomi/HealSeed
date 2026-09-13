@@ -2427,26 +2427,59 @@
   box-shadow: 0 3px 9px rgba(34, 197, 94, 0.14);
 }
 .home-summary-grid .meal-summary-card {
-  border-color: #fed7aa;
-  background: #fff7ed;
+  border-color: #e4ebe7;
+  background: #fafcfb;
 }
 
 .home-summary-grid .meal-summary-card svg,
 .home-summary-grid .meal-summary-card b {
-  color: #ea580c;
+  color: #19864a;
+}
+
+.home-overview-card .home-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.home-summary-grid .home-compact-action {
+  min-width: 0;
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 9px 4px;
+  border-color: #dcebe1;
+  background: #f8fcf9;
+  text-align: center;
+}
+
+.home-summary-grid .home-compact-action svg {
+  width: 20px;
+  height: 20px;
+  color: #22a65b;
+}
+
+.home-summary-grid .home-compact-action span {
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.home-summary-grid .home-compact-action b {
+  font-size: 9.5px;
 }
 
 .home-water-cup-card {
   grid-column: 1 / -1;
   padding: 12px;
-  border: 1px solid #bae6fd;
+  border: 1px solid #bbf7d0;
   border-radius: 14px;
-  background: linear-gradient(135deg, #f0f9ff, #fff);
+  background: linear-gradient(135deg, #f0fdf4, #fff);
 }
 
 .home-water-cup-card.done {
-  border-color: #7dd3fc;
-  background: #e0f2fe;
+  border-color: #86efac;
+  background: #dcfce7;
 }
 
 .water-cup-heading {
@@ -2457,7 +2490,7 @@
 
 .water-cup-heading > svg {
   flex-shrink: 0;
-  color: #0ea5e9;
+  color: #16a34a;
 }
 
 .water-cup-heading > span {
@@ -2479,8 +2512,8 @@
 .water-cup-heading > b {
   padding: 3px 8px;
   border-radius: 999px;
-  color: #0369a1;
-  background: #e0f2fe;
+  color: #15803d;
+  background: #dcfce7;
   font-size: 10px;
 }
 
@@ -2500,17 +2533,17 @@
   justify-content: center;
   gap: 1px;
   padding: 4px 2px;
-  border: 1px solid #dbeafe;
+  border: 1px solid #dcebe1;
   border-radius: 11px;
   color: #94a3b8;
   background: #fff;
 }
 
 .water-cup-buttons button.filled {
-  border-color: #38bdf8;
-  color: #0284c7;
-  background: #e0f2fe;
-  box-shadow: 0 3px 8px rgba(14, 165, 233, 0.12);
+  border-color: #4ade80;
+  color: #15803d;
+  background: #dcfce7;
+  box-shadow: 0 3px 8px rgba(34, 197, 94, 0.12);
 }
 
 .water-cup-buttons small {
@@ -2527,4 +2560,8 @@
 
 .home-condition-options button span {
   white-space: nowrap;
+}
+
+.home-week-chart .home-week-bars {
+  height: 88px;
 }
