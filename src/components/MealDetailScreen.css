@@ -28,6 +28,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 6px;
 }
 
@@ -41,6 +42,7 @@
   font-weight: 800;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
+  white-space: nowrap;
 }
 
 .neis-live-badge {
@@ -55,6 +57,7 @@
   padding: 3px 9px;
   border-radius: var(--radius-pill);
   box-shadow: 0 1px 3px rgba(34, 197, 94, 0.15);
+  white-space: nowrap;
 }
 
 /* Detail Screen Weekend / Holiday No-Meal Banner */

@@ -19,20 +19,23 @@ export const TodayMealCard: React.FC<TodayMealCardProps> = ({
 
   return (
     <div className="today-meal-card animate-pop-in">
-      {/* Header */}
+      {/* Header (Clean 2-row layout to prevent mobile squeeze) */}
       <div className="meal-card-header">
-        <div className="meal-card-title-group">
+        <div className="meal-card-top-row">
           <div className="meal-badge">
             <UtensilsCrossed size={14} />
             <span>오늘의 급식</span>
           </div>
+          <span className="meal-date-label">{formattedDateLabel}</span>
+        </div>
+
+        <div className="meal-card-sub-row">
+          <span className="meal-school-tag">{meal.schoolName}</span>
           <span className="neis-live-badge-card" title="교육부 NEIS 공공데이터 실시간 연동">
             <ShieldCheck size={12} className="shield-icon" />
             <span>NEIS 실시간 연동</span>
           </span>
-          <span className="meal-school-tag">{meal.schoolName}</span>
         </div>
-        <span className="meal-date-label">{formattedDateLabel}</span>
       </div>
 
       {/* Menu Preview or Weekend No-Meal Display */}

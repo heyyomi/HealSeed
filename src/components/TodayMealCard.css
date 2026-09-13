@@ -11,14 +11,22 @@
 
 .meal-card-header {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 2px;
+}
+
+.meal-card-top-row {
+  display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.meal-card-title-group {
+.meal-card-sub-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .meal-badge {
@@ -31,15 +39,19 @@
   font-weight: 800;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .meal-school-tag {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
-  color: #64748B;
+  color: #475569;
   background-color: #F1F5F9;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: var(--radius-pill);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .neis-live-badge-card {
@@ -55,10 +67,20 @@
   border-radius: var(--radius-pill);
   box-shadow: 0 1px 3px rgba(34, 197, 94, 0.15);
   letter-spacing: -0.2px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .neis-live-badge-card .shield-icon {
   color: #16A34A;
+}
+
+.meal-date-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-700);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Weekend / Holiday No-Meal Card Body */
